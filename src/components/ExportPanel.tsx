@@ -8,17 +8,17 @@ import {
 	rowsToCsv,
 } from "../lib/csv";
 import type { DayRow } from "../lib/timeline/days";
-import { Badge, Button, Card, cn, SectionHeader, Toggle } from "./ui";
+import { Badge, Button, Card, cn, GearIcon, SectionHeader, Toggle } from "./ui";
 
 type Props = {
 	rows: DayRow[];
-	range: { from: string; to: string };
 	options: CsvOptions;
 	onChange: (patch: Partial<CsvOptions>) => void;
 };
 
-export function ExportPanel({ rows, range, options, onChange }: Props) {
+export function ExportPanel({ rows, options, onChange }: Props) {
 	const [view, setView] = useState<"table" | "text">("table");
+	const [showOptions, setShowOptions] = useState(false);
 	const table = useMemo(() => buildCsvTable(rows, options), [rows, options]);
 	const csv = useMemo(() => rowsToCsv(rows, options), [rows, options]);
 	const count = exportRowsCount(rows, options);
@@ -27,117 +27,144 @@ export function ExportPanel({ rows, range, options, onChange }: Props) {
 	const reviewCount = rows.filter(
 		(row) => row.included && row.needsReview,
 	).length;
+	const fileName = csvFileName();
 
 	const download = () => {
 		const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
 		const url = URL.createObjectURL(blob);
 		const anchor = document.createElement("a");
 		anchor.href = url;
-		anchor.download = csvFileName(range.from, range.to);
+		anchor.download = fileName;
 		document.body.append(anchor);
 		anchor.click();
 		anchor.remove();
 		setTimeout(() => URL.revokeObjectURL(url), 1000);
 	};
 
+	const optionsSummary = [
+		options.delimiter === ";" ? "semicolon" : "comma",
+		options.dateStyle === "iso" ? "ISO dates" : "DD-MM-YYYY",
+		options.labels === "nl" ? "Kantoor/Thuis" : "Office/Home",
+		options.onlyClassified ? "only classified days" : "all days",
+	].join(" · ");
+
 	return (
 		<Card>
 			<SectionHeader
 				step="5"
 				title="Export for AFAS"
-				description="Check the table below, then download. The file opens in Excel; Dutch labels and semicolons are already set."
+				description="Check the table, then download. The file opens in Excel."
 				action={
-					<Badge tone={count > 0 ? "ok" : "warn"}>
-						{count} row{count === 1 ? "" : "s"}
-					</Badge>
+					<div className="flex items-center gap-2">
+						<Badge tone={count > 0 ? "ok" : "warn"}>
+							{count} row{count === 1 ? "" : "s"}
+						</Badge>
+						<Button
+							size="sm"
+							variant={showOptions ? "primary" : "ghost"}
+							onClick={() => setShowOptions((value) => !value)}
+							aria-expanded={showOptions}
+						>
+							<GearIcon />
+							Options
+						</Button>
+					</div>
 				}
 			/>
 
 			<div className="space-y-5 p-5">
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					<Choice
-						label="Delimiter"
-						value={options.delimiter}
-						options={[
-							{ value: ";", label: "Semicolon ;" },
-							{ value: ",", label: "Comma ," },
-						]}
-						onChange={(value) =>
-							onChange({ delimiter: value as CsvOptions["delimiter"] })
-						}
-					/>
-					<Choice
-						label="Date format"
-						value={options.dateStyle}
-						options={[
-							{ value: "iso", label: "2026-05-01" },
-							{ value: "dmy", label: "01-05-2026" },
-						]}
-						onChange={(value) =>
-							onChange({ dateStyle: value as CsvOptions["dateStyle"] })
-						}
-					/>
-					<Choice
-						label="Location labels"
-						value={options.labels}
-						options={[
-							{ value: "nl", label: "Kantoor / Thuis" },
-							{ value: "en", label: "Office / Home" },
-						]}
-						onChange={(value) =>
-							onChange({ labels: value as CsvOptions["labels"] })
-						}
-					/>
-				</div>
-
-				<div className="grid gap-4 md:grid-cols-2">
-					<div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-						<Toggle
-							checked={options.onlyClassified}
-							onChange={(onlyClassified) => onChange({ onlyClassified })}
-							label="Only office/home rows"
-							hint="Leave out days that still say Other or No data."
-						/>
-						<Toggle
-							checked={options.bom}
-							onChange={(bom) => onChange({ bom })}
-							label="UTF-8 BOM"
-							hint="Keeps accents intact in Excel."
-						/>
-					</div>
-					<div>
-						<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-							Extra columns
-						</p>
-						<div className="mt-2 grid grid-cols-2 gap-2">
-							<Toggle
-								checked={options.includeDay}
-								onChange={(includeDay) => onChange({ includeDay })}
-								label="Weekday"
+				{showOptions ? (
+					<>
+						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							<Choice
+								label="Delimiter"
+								value={options.delimiter}
+								options={[
+									{ value: ";", label: "Semicolon ;" },
+									{ value: ",", label: "Comma ," },
+								]}
+								onChange={(value) =>
+									onChange({ delimiter: value as CsvOptions["delimiter"] })
+								}
 							/>
-							<Toggle
-								checked={options.includeMinutes}
-								onChange={(includeMinutes) => onChange({ includeMinutes })}
-								label="Minutes"
+							<Choice
+								label="Date format"
+								value={options.dateStyle}
+								options={[
+									{ value: "iso", label: "2026-05-01" },
+									{ value: "dmy", label: "01-05-2026" },
+								]}
+								onChange={(value) =>
+									onChange({ dateStyle: value as CsvOptions["dateStyle"] })
+								}
 							/>
-							<Toggle
-								checked={options.includeTimes}
-								onChange={(includeTimes) => onChange({ includeTimes })}
-								label="First/last seen"
-							/>
-							<Toggle
-								checked={options.includeSource}
-								onChange={(includeSource) => onChange({ includeSource })}
-								label="Evidence"
-							/>
-							<Toggle
-								checked={options.includeNotes}
-								onChange={(includeNotes) => onChange({ includeNotes })}
-								label="Notes"
+							<Choice
+								label="Location labels"
+								value={options.labels}
+								options={[
+									{ value: "nl", label: "Kantoor / Thuis" },
+									{ value: "en", label: "Office / Home" },
+								]}
+								onChange={(value) =>
+									onChange({ labels: value as CsvOptions["labels"] })
+								}
 							/>
 						</div>
-					</div>
-				</div>
+
+						<div className="grid gap-4 md:grid-cols-2">
+							<div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+								<Toggle
+									checked={options.onlyClassified}
+									onChange={(onlyClassified) => onChange({ onlyClassified })}
+									label="Only office/home rows"
+									hint="Leave out days that still say Other or No data."
+								/>
+								<Toggle
+									checked={options.bom}
+									onChange={(bom) => onChange({ bom })}
+									label="UTF-8 BOM"
+									hint="Keeps accents intact in Excel."
+								/>
+							</div>
+							<div>
+								<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+									Extra columns
+								</p>
+								<div className="mt-2 grid grid-cols-2 gap-2">
+									<Toggle
+										checked={options.includeDay}
+										onChange={(includeDay) => onChange({ includeDay })}
+										label="Weekday"
+									/>
+									<Toggle
+										checked={options.includeMinutes}
+										onChange={(includeMinutes) => onChange({ includeMinutes })}
+										label="Minutes"
+									/>
+									<Toggle
+										checked={options.includeTimes}
+										onChange={(includeTimes) => onChange({ includeTimes })}
+										label="First/last seen"
+									/>
+									<Toggle
+										checked={options.includeSource}
+										onChange={(includeSource) => onChange({ includeSource })}
+										label="Evidence"
+									/>
+									<Toggle
+										checked={options.includeNotes}
+										onChange={(includeNotes) => onChange({ includeNotes })}
+										label="Notes"
+									/>
+								</div>
+							</div>
+						</div>
+					</>
+				) : (
+					<p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+						{optionsSummary}
+					</p>
+				)}
 
 				{reviewCount > 0 ? (
 					<p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/25">
@@ -158,7 +185,7 @@ export function ExportPanel({ rows, range, options, onChange }: Props) {
 							<p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
 								Exactly what HR gets — one row per working day.
 								{hiddenByFilter > 0 && options.onlyClassified
-									? ` ${hiddenByFilter} day${hiddenByFilter === 1 ? "" : "s"} left out by the filter above.`
+									? ` ${hiddenByFilter} day${hiddenByFilter === 1 ? "" : "s"} left out by the filter.`
 									: ""}
 							</p>
 						</div>
@@ -216,10 +243,8 @@ export function ExportPanel({ rows, range, options, onChange }: Props) {
 							Download CSV
 						</Button>
 						<span className="text-xs text-slate-500 dark:text-slate-400">
-							<code className="font-mono">
-								{csvFileName(range.from, range.to)}
-							</code>{" "}
-							· {count} data row{count === 1 ? "" : "s"}, nothing uploaded.
+							<code className="font-mono">{fileName}</code> · {count} data row
+							{count === 1 ? "" : "s"}, nothing uploaded.
 						</span>
 					</div>
 				</div>
@@ -290,7 +315,6 @@ function PreviewTable({
 					<tbody>
 						{table.rows.map((cells, rowIndex) => (
 							<tr
-								// Rows are homogeneous output; the index is stable for this render.
 								// biome-ignore lint/suspicious/noArrayIndexKey: rendered from a static table snapshot
 								key={rowIndex}
 								className="odd:bg-white even:bg-slate-50/60 dark:odd:bg-slate-900 dark:even:bg-slate-800/30"

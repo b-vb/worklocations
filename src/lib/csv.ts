@@ -1,4 +1,4 @@
-import { formatDate } from "./time";
+import { formatDate, localDayKey } from "./time";
 import type { DayRow, DayStatus } from "./timeline/days";
 
 export type CsvLabels = "nl" | "en";
@@ -20,8 +20,8 @@ export const defaultCsvOptions: CsvOptions = {
 	delimiter: ";",
 	dateStyle: "iso",
 	labels: "nl",
-	includeDay: true,
-	includeMinutes: true,
+	includeDay: false,
+	includeMinutes: false,
 	includeTimes: false,
 	includeSource: false,
 	includeNotes: true,
@@ -264,8 +264,8 @@ function clockCell(wall: number | null): string {
 	return `${hours}:${minutes}`;
 }
 
-export function csvFileName(from: string, to: string): string {
-	return `afas-locaties_${from}_${to}.csv`;
+export function csvFileName(): string {
+	return `werkplekken-${localDayKey()}.csv`;
 }
 
 export function exportRowsCount(rows: DayRow[], options: CsvOptions): number {

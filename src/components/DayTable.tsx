@@ -47,28 +47,38 @@ function shortDate(date: string): string {
 }
 
 export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
-	const [filter, setFilter] = useState<Filter>("included");
-
-	const filtered = useMemo(() => {
-		const visible = rows.filter((row) => {
-			if (filter === "included") return row.included;
-			if (filter === "review") return row.included && row.needsReview;
-			return true;
-		});
-		return [...visible].reverse();
-	}, [rows, filter]);
+	const [filter, setFilter] = useState<Filter | null>(null);
 
 	const reviewCount = rows.filter(
 		(row) => row.included && row.needsReview,
 	).length;
+	const includedCount = rows.filter((row) => row.included).length;
 	const overrideCount = rows.filter((row) => row.override !== undefined).length;
+
+	// Start on the days that actually need a human decision. Once the user picks
+	// a filter, their choice wins.
+	const activeFilter: Filter =
+		filter ?? (reviewCount > 0 ? "review" : "included");
+
+	const filtered = useMemo(() => {
+		const visible = rows.filter((row) => {
+			if (activeFilter === "included") return row.included;
+			if (activeFilter === "review") return row.included && row.needsReview;
+			return true;
+		});
+		return [...visible].reverse();
+	}, [rows, activeFilter]);
 
 	return (
 		<Card>
 			<SectionHeader
 				step="4"
-				title="Check the days"
-				description="Minutes are counted inside your working hours. Everything is pre-filled; days that need a human decision are highlighted. Any change is saved in this browser."
+				title={reviewCount > 0 ? "Days to review" : "Check the days"}
+				description={
+					reviewCount > 0
+						? `${reviewCount} day${reviewCount === 1 ? "" : "s"} need a decision. Set the location, or skip the day.`
+						: "Everything is filled in. Adjust any day if needed; changes are saved in this browser."
+				}
 				action={
 					overrideCount > 0 ? (
 						<Button size="sm" variant="ghost" onClick={onResetOverrides}>
@@ -81,18 +91,15 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 			<div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
 				{(
 					[
-						[
-							"included",
-							`Workdays (${rows.filter((row) => row.included).length})`,
-						],
 						["review", `Needs review (${reviewCount})`],
+						["included", `Workdays (${includedCount})`],
 						["all", `All days (${rows.length})`],
 					] as const
 				).map(([value, label]) => (
 					<Button
 						key={value}
 						size="sm"
-						variant={filter === value ? "primary" : "ghost"}
+						variant={activeFilter === value ? "primary" : "ghost"}
 						onClick={() => setFilter(value)}
 					>
 						{label}

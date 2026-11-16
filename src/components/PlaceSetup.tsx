@@ -30,6 +30,7 @@ export function PlaceSetup({
 	const [locating, setLocating] = useState(false);
 	const [locationError, setLocationError] = useState<string | null>(null);
 	const [pickTarget, setPickTarget] = useState<"office" | "home">("office");
+	const [editing, setEditing] = useState(false);
 
 	const office = settings.office;
 	const home = settings.home;
@@ -125,6 +126,168 @@ export function PlaceSetup({
 		applyOffice(point.lat, point.lng, office?.label ?? "Picked on map");
 	};
 
+	const workSuggestion =
+		suggestedWork?.label === "WORK" ? suggestedWork : undefined;
+
+	if (!editing) {
+		return (
+			<Card>
+				<SectionHeader
+					step="2"
+					title="Work and home"
+					description="Pick a suggestion, or open the map to choose the exact spot."
+					action={
+						<Button
+							size="sm"
+							variant="secondary"
+							onClick={() => setEditing(true)}
+						>
+							Edit on map
+						</Button>
+					}
+				/>
+
+				<div className="grid gap-3 p-5 md:grid-cols-2">
+					<div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+						<div className="flex items-center justify-between gap-2">
+							<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+								Office
+							</span>
+							{office ? (
+								<Badge tone="office">set</Badge>
+							) : (
+								<Badge tone="other">needed</Badge>
+							)}
+						</div>
+						{office ? (
+							<>
+								<p className="mt-2 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+									{office.label || "Pinned on the map"}
+								</p>
+								<p className="text-[11px] text-slate-500 dark:text-slate-400">
+									{office.radiusMeters} m radius
+								</p>
+								<Button
+									size="sm"
+									variant="ghost"
+									className="mt-2 -ml-2"
+									onClick={() => setEditing(true)}
+								>
+									Change
+								</Button>
+							</>
+						) : (
+							<>
+								<p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+									Everything inside this radius counts as a day at the office.
+								</p>
+								<div className="mt-2 flex flex-wrap gap-2">
+									{workSuggestion ? (
+										<Button
+											size="sm"
+											variant="primary"
+											onClick={() =>
+												applyOffice(
+													workSuggestion.lat,
+													workSuggestion.lng,
+													"Work (from Google)",
+												)
+											}
+										>
+											Use Google&rsquo;s WORK place
+										</Button>
+									) : null}
+									<Button
+										size="sm"
+										variant="secondary"
+										onClick={() => setEditing(true)}
+									>
+										Pick on map
+									</Button>
+								</div>
+							</>
+						)}
+					</div>
+
+					<div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+						<div className="flex items-center justify-between gap-2">
+							<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+								Home
+							</span>
+							{home ? (
+								<Badge tone="home">set</Badge>
+							) : (
+								<Badge tone="muted">auto</Badge>
+							)}
+						</div>
+						{home ? (
+							<>
+								<p className="mt-2 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+									{home.label || "Pinned on the map"}
+								</p>
+								<p className="text-[11px] text-slate-500 dark:text-slate-400">
+									{home.radiusMeters} m radius
+								</p>
+								<Button
+									size="sm"
+									variant="ghost"
+									className="mt-2 -ml-2"
+									onClick={() => setEditing(true)}
+								>
+									Change
+								</Button>
+							</>
+						) : (
+							<>
+								<p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+									Using the place Google labels HOME. Pin it for sharper
+									results.
+								</p>
+								<div className="mt-2 flex flex-wrap gap-2">
+									{suggestedHome ? (
+										<Button
+											size="sm"
+											variant="secondary"
+											onClick={() =>
+												applyHome(
+													suggestedHome.lat,
+													suggestedHome.lng,
+													"Home (from Google)",
+												)
+											}
+										>
+											Use suggested home
+										</Button>
+									) : null}
+									<Button
+										size="sm"
+										variant="ghost"
+										onClick={() => setEditing(true)}
+									>
+										Pick on map
+									</Button>
+								</div>
+							</>
+						)}
+					</div>
+				</div>
+
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+					<p className="text-xs text-slate-500 dark:text-slate-400">
+						{office
+							? "Saved in this browser, so you only have to do this once."
+							: "Set an office to unlock the period, the day table and the export."}
+					</p>
+					{office && onContinue ? (
+						<Button variant="primary" size="sm" onClick={onContinue}>
+							Next: choose the period
+						</Button>
+					) : null}
+				</div>
+			</Card>
+		);
+	}
+
 	return (
 		<Card>
 			<SectionHeader
@@ -132,11 +295,18 @@ export function PlaceSetup({
 				title="Where is the office?"
 				description="Click the map or drag the pins. Every minute inside a radius counts as time at that place."
 				action={
-					<Badge tone="info">
-						{suggestedWork?.label === "WORK"
-							? "Google labelled WORK found"
-							: "Street lookup by OSM"}
-					</Badge>
+					<div className="flex items-center gap-2">
+						{workSuggestion ? (
+							<Badge tone="info">Google labelled WORK found</Badge>
+						) : null}
+						<Button
+							size="sm"
+							variant="secondary"
+							onClick={() => setEditing(false)}
+						>
+							Done
+						</Button>
+					</div>
 				}
 			/>
 
@@ -154,10 +324,6 @@ export function PlaceSetup({
 						if (home) onChange({ home: { ...home, ...point } });
 					}}
 				/>
-				<p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-					Map data from OpenStreetMap, no key needed. Tiles load only while this
-					map is visible; your location history is never sent to them.
-				</p>
 			</div>
 
 			<div className="grid gap-6 px-5 pb-5 pt-4 lg:grid-cols-2">
@@ -421,17 +587,22 @@ export function PlaceSetup({
 				</div>
 			</div>
 
-			{onContinue ? (
-				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-					<p className="text-xs text-slate-500 dark:text-slate-400">
-						These settings are saved in this browser, so you only have to do
-						this once.
-					</p>
+			<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+				<p className="text-xs text-slate-500 dark:text-slate-400">
+					{office
+						? "These settings are saved in this browser, so you only have to do this once."
+						: "Set an office to unlock the period, the day table and the export."}
+				</p>
+				{office && onContinue ? (
 					<Button variant="primary" size="sm" onClick={onContinue}>
 						Next: choose the period
 					</Button>
-				</div>
-			) : null}
+				) : (
+					<Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+						Back to suggestions
+					</Button>
+				)}
+			</div>
 		</Card>
 	);
 }

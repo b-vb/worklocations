@@ -47,26 +47,41 @@ function isPlace(value: unknown): value is PlaceSetting {
 	);
 }
 
+/**
+ * Bumped when defaults change in a way that should apply to existing users.
+ * v2: weekday and minutes columns are off by default.
+ */
+const SETTINGS_VERSION = 2;
+
 export function loadSettings(): AppSettings {
 	if (typeof localStorage === "undefined") return defaultSettings;
 	try {
 		const raw = localStorage.getItem(SETTINGS_KEY);
 		if (!raw) return defaultSettings;
-		const parsed = JSON.parse(raw) as Partial<AppSettings>;
+		const parsed = JSON.parse(raw) as Partial<AppSettings> & {
+			version?: number;
+		};
+		const version = typeof parsed.version === "number" ? parsed.version : 1;
+		const { version: _version, ...stored } = parsed;
 		return {
 			...defaultSettings,
-			...parsed,
-			office: isPlace(parsed.office) ? parsed.office : null,
-			home: isPlace(parsed.home) ? parsed.home : null,
+			...stored,
+			office: isPlace(stored.office) ? stored.office : null,
+			home: isPlace(stored.home) ? stored.home : null,
 			workdays:
-				Array.isArray(parsed.workdays) && parsed.workdays.length === 7
-					? parsed.workdays.map(Boolean)
+				Array.isArray(stored.workdays) && stored.workdays.length === 7
+					? stored.workdays.map(Boolean)
 					: defaultWorkdays,
 			windowStartHour:
-				typeof parsed.windowStartHour === "number" ? parsed.windowStartHour : 7,
+				typeof stored.windowStartHour === "number" ? stored.windowStartHour : 7,
 			windowEndHour:
-				typeof parsed.windowEndHour === "number" ? parsed.windowEndHour : 19,
-			csv: { ...defaultCsvOptions, ...(parsed.csv ?? {}) },
+				typeof stored.windowEndHour === "number" ? stored.windowEndHour : 19,
+			// Old storage predates the quieter default columns, so start those
+			// users from the new defaults once.
+			csv:
+				version >= SETTINGS_VERSION
+					? { ...defaultCsvOptions, ...(stored.csv ?? {}) }
+					: defaultCsvOptions,
 		};
 	} catch {
 		return defaultSettings;
@@ -95,7 +110,10 @@ export function saveSettings(settings: AppSettings): void {
 			localStorage.removeItem(SETTINGS_KEY);
 			return;
 		}
-		localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+		localStorage.setItem(
+			SETTINGS_KEY,
+			JSON.stringify({ ...settings, version: SETTINGS_VERSION }),
+		);
 	} catch {
 		// Storage can be full or blocked; the app still works without persistence.
 	}

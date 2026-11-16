@@ -109,6 +109,11 @@ export function dayKey(wall: number): string {
 	return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
 
+/** YYYY-MM-DD for the local date of this device, e.g. for filenames. */
+export function localDayKey(date = new Date()): string {
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 export function dayStart(wall: number): number {
 	const date = new Date(wall);
 	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());

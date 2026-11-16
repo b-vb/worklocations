@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { defaultCsvOptions } from "./csv";
 import {
 	clearStoredSettings,
 	defaultSettings,
@@ -76,5 +77,34 @@ describe("settings storage", () => {
 		expect(store.size).toBe(0);
 		expect(loadSettings().office).toBeNull();
 		expect(loadOverrides()).toEqual({});
+	});
+
+	it("migrates old stored CSV options to the quieter defaults", () => {
+		store.set(
+			"afas-commute-log.settings.v1",
+			JSON.stringify({
+				office: { lat: 52.3567, lng: 4.8736, radiusMeters: 150 },
+				csv: {
+					...defaultCsvOptions,
+					includeDay: true,
+					includeMinutes: true,
+				},
+			}),
+		);
+		const loaded = loadSettings();
+		expect(loaded.office?.lat).toBeCloseTo(52.3567);
+		expect(loaded.csv.includeDay).toBe(false);
+		expect(loaded.csv.includeMinutes).toBe(false);
+	});
+
+	it("keeps CSV customisations saved by the current version", () => {
+		store.set(
+			"afas-commute-log.settings.v1",
+			JSON.stringify({
+				version: 2,
+				csv: { ...defaultCsvOptions, includeMinutes: true },
+			}),
+		);
+		expect(loadSettings().csv.includeMinutes).toBe(true);
 	});
 });

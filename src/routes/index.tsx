@@ -54,7 +54,6 @@ function Home() {
 	const [error, setError] = useState<string | null>(null);
 	const [showDetails, setShowDetails] = useState(false);
 	const [showUpload, setShowUpload] = useState(false);
-	const [showPlaces, setShowPlaces] = useState(() => settings.office === null);
 	const placesRef = useRef<HTMLDivElement | null>(null);
 	const periodRef = useRef<HTMLDivElement | null>(null);
 	const resultRef = useRef<HTMLDivElement | null>(null);
@@ -150,7 +149,7 @@ function Home() {
 	]);
 
 	const rows = useMemo(() => {
-		if (!history || !classify || !range) return [];
+		if (!history || !classify || !range || !classify.office) return [];
 		return buildDayRows(history, classify, {
 			workdays: settings.workdays,
 			excludeHolidays: settings.excludeHolidays,
@@ -192,7 +191,6 @@ function Home() {
 		clearStoredSettings();
 		setSettings(defaultSettings);
 		setOverrides({});
-		setShowPlaces(true);
 		setShowUpload(false);
 		setShowDetails(false);
 		if (history) {
@@ -401,62 +399,16 @@ function Home() {
 							/>
 						) : null}
 
-						{showPlaces || !office ? (
-							<div ref={placesRef} className="scroll-mt-4">
-								<PlaceSetup
-									settings={settings}
-									clusters={clusters}
-									onChange={updateSettings}
-									onContinue={() => {
-										setShowPlaces(false);
-										scrollTo(periodRef);
-									}}
-								/>
-							</div>
-						) : (
-							<Card>
-								<SectionHeader
-									step="2"
-									title="Work and home"
-									description="Already set up from your last visit. Change it if your office moved."
-									action={
-										<Button
-											size="sm"
-											variant="secondary"
-											onClick={() => setShowPlaces(true)}
-										>
-											Change places
-										</Button>
-									}
-								/>
-								<div className="flex flex-wrap items-center gap-2 px-5 py-4">
-									<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-										<Badge tone="office" className="max-w-full">
-											<span className="truncate">
-												Office · {office.label || "pinned"} ·{" "}
-												{office.radiusMeters} m
-											</span>
-										</Badge>
-										<Badge tone="home" className="max-w-full">
-											<span className="truncate">
-												{settings.home
-													? `Home · ${settings.home.label ?? "pinned"} · ${settings.home.radiusMeters} m`
-													: "Home · auto (Google HOME)"}
-											</span>
-										</Badge>
-									</div>
-									<Button
-										size="sm"
-										variant="primary"
-										onClick={() => scrollTo(periodRef)}
-									>
-										Next: choose the period
-									</Button>
-								</div>
-							</Card>
-						)}
+						<div ref={placesRef} className="scroll-mt-4">
+							<PlaceSetup
+								settings={settings}
+								clusters={clusters}
+								onChange={updateSettings}
+								onContinue={() => scrollTo(periodRef)}
+							/>
+						</div>
 
-						{bounds && range ? (
+						{office && bounds && range ? (
 							<div ref={periodRef} className="scroll-mt-4">
 								<RangeControls
 									settings={settings}
@@ -469,33 +421,33 @@ function Home() {
 							</div>
 						) : null}
 
-						<div
-							ref={resultRef}
-							className="scroll-mt-4 flex items-center gap-2"
-						>
-							<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-								Result
-							</h2>
-							<span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-							{!settings.office ? (
-								<Badge tone="other">no office pinned yet</Badge>
-							) : null}
-						</div>
+						{office ? (
+							<>
+								<div
+									ref={resultRef}
+									className="scroll-mt-4 flex items-center gap-2"
+								>
+									<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+										Result
+									</h2>
+									<span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+								</div>
 
-						<Summary rows={rows} summary={summary} />
-						<DayTable
-							rows={rows}
-							onOverride={setOverride}
-							onResetOverrides={() => setOverrides({})}
-						/>
-						<ExportPanel
-							rows={rows}
-							range={range ?? { from: "", to: "" }}
-							options={settings.csv}
-							onChange={(patch) =>
-								updateSettings({ csv: { ...settings.csv, ...patch } })
-							}
-						/>
+								<Summary rows={rows} summary={summary} />
+								<DayTable
+									rows={rows}
+									onOverride={setOverride}
+									onResetOverrides={() => setOverrides({})}
+								/>
+								<ExportPanel
+									rows={rows}
+									options={settings.csv}
+									onChange={(patch) =>
+										updateSettings({ csv: { ...settings.csv, ...patch } })
+									}
+								/>
+							</>
+						) : null}
 					</>
 				)}
 

@@ -1,11 +1,13 @@
+import { useState } from "react";
 import type { AppSettings } from "../lib/settings";
 import { addDaysKey, DAY_MS, dayKey, dayKeyToWallStart } from "../lib/time";
 import {
-	Badge,
 	Button,
 	Card,
 	cn,
 	Field,
+	formatDuration,
+	GearIcon,
 	SectionHeader,
 	TextInput,
 	Toggle,
@@ -41,6 +43,8 @@ export function RangeControls({
 	onSettingsChange,
 	onContinue,
 }: Props) {
+	const [showAdvanced, setShowAdvanced] = useState(false);
+
 	const applyPreset = (preset: (typeof PRESETS)[number]["id"]) => {
 		if (preset === "all") {
 			onRangeChange({ from: bounds.min, to: bounds.max });
@@ -72,16 +76,22 @@ export function RangeControls({
 		<Card>
 			<SectionHeader
 				step="3"
-				title="Which period, and what counts as a working day?"
-				description="AFAS only allows a limited backfill window, so start with that period and export in chunks if needed."
+				title="Which period?"
+				description="AFAS only allows a limited backfill window, so start there and export in chunks if needed."
 				action={
-					<Badge tone="muted">
-						{bounds.min} → {bounds.max}
-					</Badge>
+					<Button
+						size="sm"
+						variant={showAdvanced ? "primary" : "ghost"}
+						onClick={() => setShowAdvanced((value) => !value)}
+						aria-expanded={showAdvanced}
+					>
+						<GearIcon />
+						Options
+					</Button>
 				}
 			/>
 
-			<div className="space-y-6 p-5">
+			<div className="space-y-5 p-5">
 				<div className="flex flex-wrap items-end gap-3">
 					<Field label="From" className="w-full sm:w-40">
 						<TextInput
@@ -120,132 +130,155 @@ export function RangeControls({
 					</div>
 				</div>
 
-				<div className="grid gap-6 md:grid-cols-2">
-					<div>
-						<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-							Working days
-						</p>
-						<div className="mt-2 flex gap-1.5">
-							{WEEKDAY_ORDER.map((weekday, index) => (
-								<button
-									key={weekday}
-									type="button"
-									onClick={() =>
-										setWorkday(weekday, !settings.workdays[weekday])
-									}
-									className={cn(
-										"size-9 rounded-lg text-sm font-medium transition-colors",
-										settings.workdays[weekday]
-											? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-											: "border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800",
-									)}
-									aria-pressed={settings.workdays[weekday]}
-								>
-									{WEEKDAY_LABELS[index]}
-								</button>
-							))}
-						</div>
-
-						<div className="mt-4">
-							<Toggle
-								checked={settings.excludeHolidays}
-								onChange={(excludeHolidays) =>
-									onSettingsChange({ excludeHolidays })
-								}
-								label="Skip Dutch public holidays"
-								hint="Easter-based, Koningsdag, Christmas, and friends. Override any day manually in the table."
-							/>
-						</div>
-					</div>
-
-					<div>
-						<Field
-							label="Working hours"
-							hint="Only time inside this window decides whether a day is office, home, or other. Sleep and evenings are ignored."
-						>
-							<div className="flex items-center gap-2">
-								<TextInput
-									type="number"
-									aria-label="Working hours start"
-									min={0}
-									max={23}
-									value={settings.windowStartHour}
-									onChange={(event) =>
-										onSettingsChange({
-											windowStartHour: clampHour(Number(event.target.value), 7),
-										})
-									}
-									className="w-20"
-								/>
-								<span className="text-sm text-slate-500 dark:text-slate-400">
-									to
-								</span>
-								<TextInput
-									type="number"
-									aria-label="Working hours end"
-									min={1}
-									max={24}
-									value={settings.windowEndHour}
-									onChange={(event) =>
-										onSettingsChange({
-											windowEndHour: clampHour(Number(event.target.value), 19),
-										})
-									}
-									className="w-20"
-								/>
-								<span className="text-sm text-slate-500 dark:text-slate-400">
-									hours
-								</span>
+				{showAdvanced ? (
+					<div className="grid gap-6 border-t border-slate-100 pt-5 md:grid-cols-2 dark:border-slate-800">
+						<div>
+							<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+								Working days
+							</p>
+							<div className="mt-2 flex gap-1.5">
+								{WEEKDAY_ORDER.map((weekday, index) => (
+									<button
+										key={weekday}
+										type="button"
+										onClick={() =>
+											setWorkday(weekday, !settings.workdays[weekday])
+										}
+										className={cn(
+											"size-9 rounded-lg text-sm font-medium transition-colors",
+											settings.workdays[weekday]
+												? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+												: "border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800",
+										)}
+										aria-pressed={settings.workdays[weekday]}
+									>
+										{WEEKDAY_LABELS[index]}
+									</button>
+								))}
 							</div>
-						</Field>
-					</div>
 
-					<div>
-						<Field
-							label="Minimum time at the office"
-							hint="Days with less office time than this are classified as home (or flagged for review)."
-						>
-							<div className="flex items-center gap-2">
-								<TextInput
-									type="number"
-									aria-label="Minimum time at the office in minutes"
-									min={0}
-									max={720}
-									step={15}
-									value={settings.minOfficeMinutes}
-									onChange={(event) =>
-										onSettingsChange({
-											minOfficeMinutes: Math.max(
-												0,
-												Number(event.target.value) || 0,
-											),
-										})
+							<div className="mt-4">
+								<Toggle
+									checked={settings.excludeHolidays}
+									onChange={(excludeHolidays) =>
+										onSettingsChange({ excludeHolidays })
 									}
-									className="w-24"
+									label="Skip Dutch public holidays"
+									hint="Easter-based, Koningsdag, Christmas, and friends. Override any day manually in the table."
 								/>
-								<span className="text-sm text-slate-500 dark:text-slate-400">
-									minutes
-								</span>
 							</div>
-						</Field>
-						<div className="mt-2 flex flex-wrap gap-1.5">
-							{[30, 60, 120, 240].map((value) => (
-								<Button
-									key={value}
-									size="sm"
-									onClick={() => onSettingsChange({ minOfficeMinutes: value })}
-								>
-									{value < 60 ? `${value}m` : `${value / 60}h`}
-								</Button>
-							))}
 						</div>
-						<p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-							A normal office day is detected from the moment you arrive until
-							you leave, so 2 hours is a safe threshold for "I was there long
-							enough to matter".
-						</p>
+
+						<div>
+							<Field
+								label="Working hours"
+								hint="Only time inside this window decides whether a day is office, home, or other. Sleep and evenings are ignored."
+							>
+								<div className="flex items-center gap-2">
+									<TextInput
+										type="number"
+										aria-label="Working hours start"
+										min={0}
+										max={23}
+										value={settings.windowStartHour}
+										onChange={(event) =>
+											onSettingsChange({
+												windowStartHour: clampHour(
+													Number(event.target.value),
+													7,
+												),
+											})
+										}
+										className="w-20"
+									/>
+									<span className="text-sm text-slate-500 dark:text-slate-400">
+										to
+									</span>
+									<TextInput
+										type="number"
+										aria-label="Working hours end"
+										min={1}
+										max={24}
+										value={settings.windowEndHour}
+										onChange={(event) =>
+											onSettingsChange({
+												windowEndHour: clampHour(
+													Number(event.target.value),
+													19,
+												),
+											})
+										}
+										className="w-20"
+									/>
+									<span className="text-sm text-slate-500 dark:text-slate-400">
+										hours
+									</span>
+								</div>
+							</Field>
+						</div>
+
+						<div>
+							<Field
+								label="Minimum time at the office"
+								hint="Days with less office time than this are classified as home (or flagged for review)."
+							>
+								<div className="flex items-center gap-2">
+									<TextInput
+										type="number"
+										aria-label="Minimum time at the office in minutes"
+										min={0}
+										max={720}
+										step={15}
+										value={settings.minOfficeMinutes}
+										onChange={(event) =>
+											onSettingsChange({
+												minOfficeMinutes: Math.max(
+													0,
+													Number(event.target.value) || 0,
+												),
+											})
+										}
+										className="w-24"
+									/>
+									<span className="text-sm text-slate-500 dark:text-slate-400">
+										minutes
+									</span>
+								</div>
+							</Field>
+							<div className="mt-2 flex flex-wrap gap-1.5">
+								{[30, 60, 120, 240].map((value) => (
+									<Button
+										key={value}
+										size="sm"
+										onClick={() =>
+											onSettingsChange({ minOfficeMinutes: value })
+										}
+									>
+										{value < 60 ? `${value}m` : `${value / 60}h`}
+									</Button>
+								))}
+							</div>
+							<p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+								A normal office day is detected from the moment you arrive until
+								you leave, so 2 hours is a safe threshold for "I was there long
+								enough to matter".
+							</p>
+						</div>
 					</div>
-				</div>
+				) : (
+					<p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+						{workdaysSummary(settings.workdays)} ·{" "}
+						{String(settings.windowStartHour).padStart(2, "0")}:00–
+						{String(settings.windowEndHour).padStart(2, "0")}:00 · office ≥{" "}
+						{settings.minOfficeMinutes > 0
+							? formatDuration(settings.minOfficeMinutes)
+							: "0m"}{" "}
+						·{" "}
+						{settings.excludeHolidays
+							? "holidays skipped"
+							: "holidays included"}
+					</p>
+				)}
 			</div>
 
 			{onContinue ? (
@@ -275,4 +308,26 @@ export function rangeBounds(
 function clampHour(value: number, fallback: number): number {
 	if (!Number.isFinite(value)) return fallback;
 	return Math.min(24, Math.max(0, Math.round(value)));
+}
+
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function workdaysSummary(workdays: boolean[]): string {
+	const active = workdays
+		.map((on, index) => (on ? WEEKDAY_SHORT[index] : null))
+		.filter((day): day is string => day !== null);
+	if (active.length === 0) return "no working days";
+	if (active.length === 7) return "every day";
+	if (
+		workdays[1] &&
+		workdays[2] &&
+		workdays[3] &&
+		workdays[4] &&
+		workdays[5] &&
+		!workdays[0] &&
+		!workdays[6]
+	) {
+		return "Mon–Fri";
+	}
+	return active.join(", ");
 }

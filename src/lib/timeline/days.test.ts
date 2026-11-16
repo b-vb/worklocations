@@ -313,10 +313,8 @@ describe("rowsToCsv", () => {
 			.replace(/^\uFEFF/, "")
 			.trim()
 			.split("\r\n");
-		expect(lines[0]).toBe(
-			"Datum;Dag;Locatie;Minuten kantoor;Minuten thuis;Opmerking",
-		);
-		expect(lines).toContain("04-05-2026;maandag;Kantoor;480;0;");
+		expect(lines[0]).toBe("Datum;Locatie;Opmerking");
+		expect(lines).toContain("04-05-2026;Kantoor;");
 		// "Other" days are excluded by onlyClassified.
 		expect(lines.some((line) => line.includes("Anders"))).toBe(false);
 	});
@@ -346,8 +344,8 @@ describe("rowsToCsv", () => {
 			bom: false,
 		});
 		const lines = csv.trim().split("\r\n");
-		expect(lines[0]).toBe("Date,Day,Location,Minutes office,Minutes home,Note");
-		expect(lines[1]).toBe("2026-05-04,Monday,Home,0,0,manual");
+		expect(lines[0]).toBe("Date,Location,Note");
+		expect(lines[1]).toBe("2026-05-04,Home,manual");
 	});
 
 	it("exposes the same content as the CSV for the table preview", () => {
@@ -367,21 +365,11 @@ describe("rowsToCsv", () => {
 
 		expect(preview.columns.map((column) => column.header)).toEqual([
 			"Datum",
-			"Dag",
 			"Locatie",
-			"Minuten kantoor",
-			"Minuten thuis",
 			"Opmerking",
 		]);
 		expect(preview.rows).toHaveLength(2);
-		expect(preview.rows[0]).toEqual([
-			"04-05-2026",
-			"maandag",
-			"Kantoor",
-			"480",
-			"0",
-			"",
-		]);
+		expect(preview.rows[0]).toEqual(["04-05-2026", "Kantoor", ""]);
 
 		const csvLines = csv
 			.replace(/^\uFEFF/, "")
@@ -409,6 +397,6 @@ describe("rowsToCsv", () => {
 		});
 		const comma = buildCsvTable(rows, { ...defaultCsvOptions, delimiter: "," });
 		expect(comma.rows).toEqual(semicolon.rows);
-		expect(comma.rows[0][5]).toBe("Feest;dag");
+		expect(comma.rows[0][2]).toBe("Feest;dag");
 	});
 });
