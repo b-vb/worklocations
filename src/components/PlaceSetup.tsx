@@ -149,8 +149,8 @@ export function PlaceSetup({ settings, clusters, onChange }: Props) {
 					}}
 				/>
 				<p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-					Tiles are loaded from OpenStreetMap/CARTO only while this map is
-					visible. Your location history is never sent to them.
+					Map data from OpenStreetMap, no key needed. Tiles load only while this
+					map is visible; your location history is never sent to them.
 				</p>
 			</div>
 

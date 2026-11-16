@@ -1,6 +1,6 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	Circle,
 	MapContainer,
@@ -17,6 +17,18 @@ const OFFICE_COLOR = "#4f46e5";
 const HOME_COLOR = "#059669";
 const FALLBACK_CENTER: L.LatLngExpression = [52.1326, 5.2913];
 
+const ATTRIBUTION =
+	'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+/**
+ * All key-free. The second one is only used when the main OSM tile server
+ * fails repeatedly (blocked network, tough proxy, rate limit).
+ */
+const TILE_PROVIDERS = [
+	"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+	"https://tile.openstreetmap.de/{z}/{x}/{y}.png",
+];
+
 type PickTarget = "office" | "home";
 
 type Props = {
@@ -28,23 +40,6 @@ type Props = {
 	onMoveOffice: (point: LatLng) => void;
 	onMoveHome: (point: LatLng) => void;
 };
-
-function usePrefersDark(): boolean {
-	const [dark, setDark] = useState(
-		() =>
-			typeof window !== "undefined" &&
-			window.matchMedia("(prefers-color-scheme: dark)").matches,
-	);
-
-	useEffect(() => {
-		const query = window.matchMedia("(prefers-color-scheme: dark)");
-		const update = () => setDark(query.matches);
-		query.addEventListener("change", update);
-		return () => query.removeEventListener("change", update);
-	}, []);
-
-	return dark;
-}
 
 function dotIcon(color: string, label: string): L.DivIcon {
 	return L.divIcon({
@@ -104,8 +99,30 @@ export function PlaceMap({
 	onMoveOffice,
 	onMoveHome,
 }: Props) {
-	const dark = usePrefersDark();
 	const [map, setMap] = useState<L.Map | null>(null);
+	const [providerIndex, setProviderIndex] = useState(0);
+	const [tilesFailed, setTilesFailed] = useState(false);
+	const providerRef = useRef(0);
+	const failuresRef = useRef(0);
+
+	const providerUrl = TILE_PROVIDERS[providerIndex];
+
+	const handleTileError = () => {
+		failuresRef.current += 1;
+		if (failuresRef.current < 3) return;
+		failuresRef.current = 0;
+		if (providerRef.current < TILE_PROVIDERS.length - 1) {
+			providerRef.current += 1;
+			setProviderIndex(providerRef.current);
+			return;
+		}
+		setTilesFailed(true);
+	};
+
+	const handleTileLoad = () => {
+		failuresRef.current = 0;
+		setTilesFailed(false);
+	};
 
 	const officeIcon = useMemo(() => dotIcon(OFFICE_COLOR, "O"), []);
 	const homeIcon = useMemo(() => dotIcon(HOME_COLOR, "H"), []);
@@ -183,80 +200,89 @@ export function PlaceMap({
 				</div>
 			</div>
 
-			<MapContainer
-				ref={setMap}
-				center={center}
-				zoom={office || home ? 14 : 7}
-				scrollWheelZoom={false}
-				className="h-[300px] w-full"
-				attributionControl={true}
-			>
-				<TileLayer
-					url={
-						dark
-							? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-							: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-					}
-					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-					subdomains="abcd"
-					maxZoom={20}
-				/>
+			<div className="relative">
+				<MapContainer
+					ref={setMap}
+					center={center}
+					zoom={office || home ? 14 : 7}
+					scrollWheelZoom={false}
+					className="h-[300px] w-full"
+					attributionControl={true}
+				>
+					<TileLayer
+						key={providerUrl}
+						url={providerUrl}
+						attribution={ATTRIBUTION}
+						maxZoom={19}
+						eventHandlers={{
+							tileerror: handleTileError,
+							load: handleTileLoad,
+						}}
+					/>
 
-				{office ? (
-					<>
-						<Circle
-							center={[office.lat, office.lng]}
-							radius={office.radiusMeters}
-							pathOptions={{
-								color: OFFICE_COLOR,
-								fillColor: OFFICE_COLOR,
-								fillOpacity: 0.14,
-								weight: 1.5,
-							}}
-						/>
-						<Marker
-							position={[office.lat, office.lng]}
-							icon={officeIcon}
-							draggable
-							eventHandlers={{
-								dragend: (event) => {
-									const latlng = (event.target as L.Marker).getLatLng();
-									onMoveOffice({ lat: latlng.lat, lng: latlng.lng });
-								},
-							}}
-						/>
-					</>
+					{office ? (
+						<>
+							<Circle
+								center={[office.lat, office.lng]}
+								radius={office.radiusMeters}
+								pathOptions={{
+									color: OFFICE_COLOR,
+									fillColor: OFFICE_COLOR,
+									fillOpacity: 0.14,
+									weight: 1.5,
+								}}
+							/>
+							<Marker
+								position={[office.lat, office.lng]}
+								icon={officeIcon}
+								draggable
+								eventHandlers={{
+									dragend: (event) => {
+										const latlng = (event.target as L.Marker).getLatLng();
+										onMoveOffice({ lat: latlng.lat, lng: latlng.lng });
+									},
+								}}
+							/>
+						</>
+					) : null}
+
+					{home ? (
+						<>
+							<Circle
+								center={[home.lat, home.lng]}
+								radius={home.radiusMeters}
+								pathOptions={{
+									color: HOME_COLOR,
+									fillColor: HOME_COLOR,
+									fillOpacity: 0.14,
+									weight: 1.5,
+								}}
+							/>
+							<Marker
+								position={[home.lat, home.lng]}
+								icon={homeIcon}
+								draggable
+								eventHandlers={{
+									dragend: (event) => {
+										const latlng = (event.target as L.Marker).getLatLng();
+										onMoveHome({ lat: latlng.lat, lng: latlng.lng });
+									},
+								}}
+							/>
+						</>
+					) : null}
+
+					<ClickToPick onPick={onPick} />
+					<FitToPlaces points={points} />
+				</MapContainer>
+
+				{tilesFailed ? (
+					<div className="pointer-events-none absolute inset-x-3 bottom-8 z-[500] rounded-lg bg-amber-50/95 px-3 py-2 text-[11px] text-amber-800 shadow ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30">
+						Map tiles could not be loaded (offline?). Clicking and dragging
+						still sets the location.
+					</div>
 				) : null}
-
-				{home ? (
-					<>
-						<Circle
-							center={[home.lat, home.lng]}
-							radius={home.radiusMeters}
-							pathOptions={{
-								color: HOME_COLOR,
-								fillColor: HOME_COLOR,
-								fillOpacity: 0.14,
-								weight: 1.5,
-							}}
-						/>
-						<Marker
-							position={[home.lat, home.lng]}
-							icon={homeIcon}
-							draggable
-							eventHandlers={{
-								dragend: (event) => {
-									const latlng = (event.target as L.Marker).getLatLng();
-									onMoveHome({ lat: latlng.lat, lng: latlng.lng });
-								},
-							}}
-						/>
-					</>
-				) : null}
-
-				<ClickToPick onPick={onPick} />
-				<FitToPlaces points={points} />
-			</MapContainer>
+			</div>
 		</div>
 	);
 }

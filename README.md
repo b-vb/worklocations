@@ -69,9 +69,10 @@ AFAS only allows a limited backfill window, so the range picker has a
   server, no analytics.
 - Two optional network calls, both only when you use them: address search sends
   the text you typed to OpenStreetMap's [Photon](https://photon.komoot.io/)
-  service, and the map requests tiles from CARTO/OpenStreetMap for the area you
-  are looking at. No location history is ever sent to either. Use coordinates or
-  a Google Maps link if you prefer zero lookups.
+  service, and the map requests tiles from
+  [OpenStreetMap](https://www.openstreetmap.org/copyright) for the area you are
+  looking at. No location history is ever sent to either. Use coordinates or a
+  Google Maps link if you prefer zero lookups.
 - Office/home settings and manual day overrides are stored in `localStorage` on
   this device. The timeline itself is not persisted.
 

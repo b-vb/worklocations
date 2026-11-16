@@ -47,6 +47,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 		background: #0f172a;
 	}
 
+	/* OpenStreetMap has no dark tiles, so invert the tile pane only. Pins and
+	   radius circles live in other panes and keep their real colours. */
+	.leaflet-tile-pane {
+		filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.92);
+	}
+
 	.leaflet-bar a {
 		background: #1e293b;
 		border-color: #334155;
