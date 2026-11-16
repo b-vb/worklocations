@@ -73,12 +73,42 @@ export function loadSettings(): AppSettings {
 	}
 }
 
+function isDefaultSettings(settings: AppSettings): boolean {
+	return (
+		settings.office === null &&
+		settings.home === null &&
+		settings.minOfficeMinutes === defaultSettings.minOfficeMinutes &&
+		settings.windowStartHour === defaultSettings.windowStartHour &&
+		settings.windowEndHour === defaultSettings.windowEndHour &&
+		settings.excludeHolidays === defaultSettings.excludeHolidays &&
+		JSON.stringify(settings.workdays) === JSON.stringify(defaultWorkdays) &&
+		JSON.stringify(settings.csv) === JSON.stringify(defaultCsvOptions)
+	);
+}
+
 export function saveSettings(settings: AppSettings): void {
 	if (typeof localStorage === "undefined") return;
 	try {
+		// Keep storage empty when nothing differs from the defaults, so "reset"
+		// really means "nothing stored".
+		if (isDefaultSettings(settings)) {
+			localStorage.removeItem(SETTINGS_KEY);
+			return;
+		}
 		localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 	} catch {
 		// Storage can be full or blocked; the app still works without persistence.
+	}
+}
+
+/** Removes every stored preference: places, working hours, CSV options, overrides. */
+export function clearStoredSettings(): void {
+	if (typeof localStorage === "undefined") return;
+	try {
+		localStorage.removeItem(SETTINGS_KEY);
+		localStorage.removeItem(OVERRIDES_KEY);
+	} catch {
+		// Nothing useful to do if storage is unavailable.
 	}
 }
 
@@ -104,6 +134,10 @@ export function loadOverrides(): Record<string, Override> {
 export function saveOverrides(overrides: Record<string, Override>): void {
 	if (typeof localStorage === "undefined") return;
 	try {
+		if (Object.keys(overrides).length === 0) {
+			localStorage.removeItem(OVERRIDES_KEY);
+			return;
+		}
 		localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
 	} catch {
 		// Ignore quota errors.

@@ -15,6 +15,8 @@ import { Badge, Button, Card, SectionHeader } from "../components/ui";
 import { holidaysInRange } from "../lib/holidays";
 import {
 	type AppSettings,
+	clearStoredSettings,
+	defaultSettings,
 	loadOverrides,
 	loadSettings,
 	saveOverrides,
@@ -180,6 +182,24 @@ function Home() {
 			else next[date] = override;
 			return next;
 		});
+	};
+
+	const resetSavedSettings = () => {
+		const confirmed = window.confirm(
+			"Clear your saved office, home, working hours, export options and manual day overrides? The loaded file stays in this tab.",
+		);
+		if (!confirmed) return;
+		clearStoredSettings();
+		setSettings(defaultSettings);
+		setOverrides({});
+		setShowPlaces(true);
+		setShowUpload(false);
+		setShowDetails(false);
+		if (history) {
+			window.setTimeout(() => scrollTo(placesRef), 120);
+		} else {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
 	};
 
 	return (
@@ -479,10 +499,15 @@ function Home() {
 					</>
 				)}
 
-				<p className="pb-8 pt-2 text-center text-xs text-slate-400 dark:text-slate-500">
-					Location history stays in this tab. Settings and manual day overrides
-					are stored in localStorage on this device.
-				</p>
+				<div className="flex flex-col items-center gap-2 pb-8 pt-2">
+					<p className="text-center text-xs text-slate-400 dark:text-slate-500">
+						Location history stays in this tab. Settings and manual overrides
+						are stored in localStorage on this device.
+					</p>
+					<Button size="sm" variant="ghost" onClick={resetSavedSettings}>
+						Reset saved settings
+					</Button>
+				</div>
 			</main>
 		</div>
 	);
