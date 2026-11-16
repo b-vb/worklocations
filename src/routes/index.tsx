@@ -286,57 +286,57 @@ function Home() {
 					</>
 				) : (
 					<>
-						<Card className="p-4">
-							<div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-								<div className="flex items-center gap-2">
-									<span className="font-medium text-slate-800 dark:text-slate-100">
-										Your export
-									</span>
-									<Badge tone="muted">
-										{plural(history.files.length, "file")}
-									</Badge>
-								</div>
-								<div className="flex items-center gap-2">
-									<Badge tone="info">{plural(totalVisits, "visit")}</Badge>
-									{totalPoints > 0 ? (
-										<Badge tone="info">{plural(totalPoints, "point")}</Badge>
-									) : null}
-								</div>
+						<Card>
+							<SectionHeader
+								step="1"
+								title="Your export"
+								description="Already loaded in this browser. Replace it if you have a newer export."
+								action={
+									<div className="flex items-center gap-2">
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => setShowDetails((value) => !value)}
+											aria-expanded={showDetails}
+										>
+											{showDetails ? "Hide details" : "Details"}
+										</Button>
+										<Button
+											size="sm"
+											variant={showUpload ? "primary" : "secondary"}
+											onClick={() => setShowUpload((value) => !value)}
+										>
+											{showUpload ? "Done" : "Replace file"}
+										</Button>
+									</div>
+								}
+							/>
+							<div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3 text-sm">
+								<Badge tone="muted">
+									{plural(history.files.length, "file")}
+								</Badge>
+								<Badge tone="info">{plural(totalVisits, "visit")}</Badge>
+								{totalPoints > 0 ? (
+									<Badge tone="info">{plural(totalPoints, "point")}</Badge>
+								) : null}
 								{history.range ? (
 									<span className="text-slate-500 dark:text-slate-400">
 										{formatDate(bounds?.min ?? "", "dmy")} –{" "}
 										{formatDate(bounds?.max ?? "", "dmy")} available
 									</span>
 								) : null}
-								<div className="ml-auto flex items-center gap-2">
-									{history.warnings.length > 0 ? (
-										<button
-											type="button"
-											onClick={() => setShowDetails((value) => !value)}
-											className="text-xs font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-400"
-										>
-											{plural(history.warnings.length, "warning")}
-										</button>
-									) : null}
-									<Button
-										size="sm"
-										variant="ghost"
+								{history.warnings.length > 0 ? (
+									<button
+										type="button"
 										onClick={() => setShowDetails((value) => !value)}
-										aria-expanded={showDetails}
+										className="ml-auto text-xs font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-400"
 									>
-										{showDetails ? "Hide details" : "Details"}
-									</Button>
-									<Button
-										size="sm"
-										variant={showUpload ? "primary" : "secondary"}
-										onClick={() => setShowUpload((value) => !value)}
-									>
-										{showUpload ? "Done" : "Replace file"}
-									</Button>
-								</div>
+										{plural(history.warnings.length, "warning")}
+									</button>
+								) : null}
 							</div>
 							{showDetails ? (
-								<div className="mt-3 space-y-1 rounded-lg bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+								<div className="mx-5 mb-4 space-y-1 rounded-lg bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
 									<p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
 										Files
 									</p>

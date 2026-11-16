@@ -27,7 +27,7 @@ export function DropZone({
 	return (
 		<Card>
 			<SectionHeader
-				step={hasHistory ? undefined : "1"}
+				step="1"
 				title={
 					hasHistory ? "Location history" : "Open your Google Timeline export"
 				}
