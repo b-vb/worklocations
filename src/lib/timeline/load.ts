@@ -1,16 +1,31 @@
 import { type ParseInput, parseTimelineJson } from "./parse";
 import type { ParsedHistory } from "./types";
 
+export type ParseProgress =
+	| { phase: "reading"; name: string; index: number; total: number }
+	| { phase: "building" };
+
 type WorkerMessage =
-	| { type: "progress"; message: string }
+	| ({ type: "progress" } & ParseProgress)
 	| { type: "done"; history: ParsedHistory }
 	| { type: "error"; message: string };
 
-async function parseInline(files: File[]): Promise<ParsedHistory> {
+async function parseInline(
+	files: File[],
+	onProgress?: (progress: ParseProgress) => void,
+): Promise<ParsedHistory> {
 	const inputs: ParseInput[] = [];
-	for (const file of files) {
+	for (let index = 0; index < files.length; index += 1) {
+		const file = files[index];
+		onProgress?.({
+			phase: "reading",
+			name: file.name,
+			index: index + 1,
+			total: files.length,
+		});
 		inputs.push({ name: file.name, bytes: file.size, text: await file.text() });
 	}
+	onProgress?.({ phase: "building" });
 	return parseTimelineJson(inputs);
 }
 
@@ -21,11 +36,10 @@ async function parseInline(files: File[]): Promise<ParsedHistory> {
  */
 export function parseTimelineFiles(
 	files: File[],
-	onProgress?: (message: string) => void,
+	onProgress?: (progress: ParseProgress) => void,
 ): Promise<ParsedHistory> {
 	if (typeof Worker === "undefined") {
-		onProgress?.("Reading files…");
-		return parseInline(files);
+		return parseInline(files, onProgress);
 	}
 
 	return new Promise((resolve, reject) => {
@@ -35,7 +49,7 @@ export function parseTimelineFiles(
 				type: "module",
 			});
 		} catch {
-			parseInline(files).then(resolve, reject);
+			parseInline(files, onProgress).then(resolve, reject);
 			return;
 		}
 
@@ -43,7 +57,18 @@ export function parseTimelineFiles(
 
 		worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
 			const data = event.data;
-			if (data.type === "progress") onProgress?.(data.message);
+			if (data.type === "progress") {
+				if (data.phase === "reading") {
+					onProgress?.({
+						phase: "reading",
+						name: data.name ?? "Timeline.json",
+						index: data.index ?? 1,
+						total: data.total ?? files.length,
+					});
+				} else {
+					onProgress?.({ phase: "building" });
+				}
+			}
 			if (data.type === "done") {
 				finish();
 				resolve(data.history);

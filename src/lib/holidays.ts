@@ -78,3 +78,21 @@ export function holidaysInRange(from: string, to: string): Map<string, string> {
 			.map((date) => [date, result.get(date) ?? ""]),
 	);
 }
+
+const HOLIDAY_EN: Record<string, string> = {
+	Nieuwjaarsdag: "New Year's Day",
+	"Goede Vrijdag": "Good Friday",
+	"Eerste Paasdag": "Easter Sunday",
+	"Tweede Paasdag": "Easter Monday",
+	Koningsdag: "King's Day",
+	Bevrijdingsdag: "Liberation Day",
+	Hemelvaartsdag: "Ascension Day",
+	"Eerste Pinksterdag": "Whit Sunday",
+	"Tweede Pinksterdag": "Whit Monday",
+	"Eerste Kerstdag": "Christmas Day",
+	"Tweede Kerstdag": "Boxing Day",
+};
+
+export function holidayLabel(name: string, locale: "nl" | "en"): string {
+	return locale === "en" ? (HOLIDAY_EN[name] ?? name) : name;
+}

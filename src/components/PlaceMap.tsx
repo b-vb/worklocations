@@ -10,6 +10,7 @@ import {
 	useMapEvents,
 } from "react-leaflet";
 import type { LatLng } from "../lib/geo";
+import { useI18n } from "../lib/i18n";
 import type { PlaceSetting } from "../lib/settings";
 import { Button, cn } from "./ui";
 
@@ -99,6 +100,7 @@ export function PlaceMap({
 	onMoveOffice,
 	onMoveHome,
 }: Props) {
+	const { t } = useI18n();
 	const [map, setMap] = useState<L.Map | null>(null);
 	const [providerIndex, setProviderIndex] = useState(0);
 	const [tilesFailed, setTilesFailed] = useState(false);
@@ -146,13 +148,13 @@ export function PlaceMap({
 			<div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
 				<div className="flex items-center gap-2">
 					<span className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-						Click the map to set
+						{t("map.clickToSet")}
 					</span>
 					<div className="flex rounded-md border border-slate-200 p-0.5 dark:border-slate-700">
 						{(
 							[
-								["office", "Office"],
-								["home", "Home"],
+								["office", t("map.office")],
+								["home", t("map.home")],
 							] as const
 						).map(([value, label]) => (
 							<button
@@ -176,7 +178,7 @@ export function PlaceMap({
 				</div>
 				<div className="flex items-center gap-2">
 					<span className="hidden text-[11px] text-slate-400 dark:text-slate-500 sm:inline">
-						Drag a pin to fine-tune
+						{t("map.dragHint")}
 					</span>
 					<Button
 						size="sm"
@@ -195,7 +197,7 @@ export function PlaceMap({
 								);
 						}}
 					>
-						Recenter
+						{t("map.recenter")}
 					</Button>
 				</div>
 			</div>
@@ -278,8 +280,7 @@ export function PlaceMap({
 
 				{tilesFailed ? (
 					<div className="pointer-events-none absolute inset-x-3 bottom-8 z-[500] rounded-lg bg-amber-50/95 px-3 py-2 text-[11px] text-amber-800 shadow ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30">
-						Map tiles could not be loaded (offline?). Clicking and dragging
-						still sets the location.
+						{t("map.tilesFailed")}
 					</div>
 				) : null}
 			</div>

@@ -1,3 +1,4 @@
+import { holidayLabel } from "./holidays";
 import { formatDate, localDayKey } from "./time";
 import type { DayRow, DayStatus } from "./timeline/days";
 
@@ -98,7 +99,9 @@ function escapeCell(value: string, delimiter: string): string {
 
 function noteFor(row: DayRow, labels: CsvLabels): string {
 	const notes: string[] = [];
-	if (row.holiday && row.override === undefined) notes.push(row.holiday);
+	if (row.holiday && row.override === undefined) {
+		notes.push(holidayLabel(row.holiday, labels));
+	}
 	if (row.override !== undefined && row.override !== "skip")
 		notes.push(labels === "nl" ? "handmatig" : "manual");
 	if (row.override === "skip")

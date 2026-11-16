@@ -1,3 +1,4 @@
+import { useI18n } from "../lib/i18n";
 import type { DayRow, SummaryData } from "../lib/timeline/days";
 import { Card, cn, Stat } from "./ui";
 
@@ -7,25 +8,26 @@ type Props = {
 };
 
 export function Summary({ rows, summary }: Props) {
+	const { t } = useI18n();
 	const total = Math.max(1, summary.days);
 	const segments = [
 		{
-			label: "Office",
+			label: t("status.office"),
 			value: summary.office,
 			className: "bg-indigo-500 dark:bg-indigo-400",
 		},
 		{
-			label: "Home",
+			label: t("status.home"),
 			value: summary.home,
 			className: "bg-emerald-500 dark:bg-emerald-400",
 		},
 		{
-			label: "Other",
+			label: t("status.other"),
 			value: summary.other,
 			className: "bg-amber-400 dark:bg-amber-300",
 		},
 		{
-			label: "No data",
+			label: t("status.no-data"),
 			value: summary.noData,
 			className: "bg-slate-300 dark:bg-slate-700",
 		},
@@ -37,29 +39,33 @@ export function Summary({ rows, summary }: Props) {
 		<Card className="p-5">
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 				<Stat
-					label="Working days"
+					label={t("summary.days")}
 					value={summary.days}
-					hint="in the selected range"
+					hint={t("summary.daysHint")}
 				/>
 				<Stat
-					label="Office"
+					label={t("summary.office")}
 					value={summary.office}
-					hint={`${Math.round((summary.office / total) * 100)}% of days`}
+					hint={t("summary.percent", {
+						percent: Math.round((summary.office / total) * 100),
+					})}
 					tone="office"
 				/>
 				<Stat
-					label="Home"
+					label={t("summary.home")}
 					value={summary.home}
-					hint={`${Math.round((summary.home / total) * 100)}% of days`}
+					hint={t("summary.percent", {
+						percent: Math.round((summary.home / total) * 100),
+					})}
 					tone="home"
 				/>
 				<Stat
-					label="To review"
+					label={t("summary.review")}
 					value={summary.review}
 					hint={
 						overridden > 0
-							? `${overridden} manual override(s)`
-							: "other places or no data"
+							? t("summary.override", { count: overridden })
+							: t("summary.reviewHint")
 					}
 					tone={summary.review > 0 ? "other" : "ok"}
 				/>

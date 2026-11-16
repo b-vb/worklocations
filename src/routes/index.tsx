@@ -4,6 +4,7 @@ import { DayTable } from "../components/DayTable";
 import { DropZone } from "../components/DropZone";
 import { ExportPanel } from "../components/ExportPanel";
 import { LocalDataPanel } from "../components/LocalDataPanel";
+import { LocaleSwitcher } from "../components/LocaleSwitcher";
 import { PlaceSetup } from "../components/PlaceSetup";
 import {
 	type Range,
@@ -13,6 +14,7 @@ import {
 import { Summary } from "../components/Summary";
 import { Badge, Button, Card, SectionHeader } from "../components/ui";
 import { holidaysInRange } from "../lib/holidays";
+import { useI18n } from "../lib/i18n";
 import {
 	type AppSettings,
 	clearStoredSettings,
@@ -22,7 +24,7 @@ import {
 	saveOverrides,
 	saveSettings,
 } from "../lib/settings";
-import { addDaysKey, formatDate } from "../lib/time";
+import { addDaysKey } from "../lib/time";
 import {
 	buildDayRows,
 	clusterPlaces,
@@ -34,15 +36,14 @@ import type { ParsedHistory } from "../lib/timeline/types";
 
 export const Route = createFileRoute("/")({ component: Home });
 
-function plural(
-	count: number,
-	singular: string,
-	pluralForm = `${singular}s`,
-): string {
-	return `${count.toLocaleString()} ${count === 1 ? singular : pluralForm}`;
-}
+const FORMAT_LABEL: Record<string, string> = {
+	device: "format.device",
+	legacy: "format.legacy",
+	records: "format.records",
+};
 
 function Home() {
+	const { t, formatDay } = useI18n();
 	const [history, setHistory] = useState<ParsedHistory | null>(null);
 	const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
 	const [overrides, setOverrides] = useState<Record<string, Override>>(() =>
@@ -95,9 +96,21 @@ function Home() {
 	const handleFiles = async (files: File[]) => {
 		setBusy(true);
 		setError(null);
-		setProgress("Reading files…");
+		setProgress(t("drop.reading"));
 		try {
-			const parsed = await parseTimelineFiles(files, setProgress);
+			const parsed = await parseTimelineFiles(files, (progress) => {
+				if (progress.phase === "reading") {
+					setProgress(
+						t("drop.readingFile", {
+							name: progress.name,
+							index: progress.index,
+							total: progress.total,
+						}),
+					);
+				} else {
+					setProgress(t("drop.building"));
+				}
+			});
 			applyHistory(parsed);
 			setShowUpload(false);
 			setShowDetails(parsed.warnings.length > 0);
@@ -112,9 +125,7 @@ function Home() {
 				window.setTimeout(() => scrollTo(target), 150);
 			}
 		} catch (caught) {
-			setError(
-				caught instanceof Error ? caught.message : "Could not read the file.",
-			);
+			setError(caught instanceof Error ? caught.message : t("drop.readFailed"));
 		} finally {
 			setBusy(false);
 			setProgress(null);
@@ -184,9 +195,7 @@ function Home() {
 	};
 
 	const resetSavedSettings = () => {
-		const confirmed = window.confirm(
-			"Clear your saved office, home, working hours, export options and manual day overrides? The loaded file stays in this tab.",
-		);
+		const confirmed = window.confirm(t("footer.resetConfirm"));
 		if (!confirmed) return;
 		clearStoredSettings();
 		setSettings(defaultSettings);
@@ -223,18 +232,18 @@ function Home() {
 						</div>
 						<div>
 							<h1 className="text-base font-semibold tracking-tight">
-								Commute Log
+								{t("app.title")}
 							</h1>
 							<p className="text-xs text-slate-500 dark:text-slate-400">
-								Google Timeline → AFAS work location, without the spreadsheet
-								archaeology
+								{t("app.subtitle")}
 							</p>
 						</div>
 					</div>
 					<div className="flex items-center gap-2">
+						<LocaleSwitcher />
 						<Badge tone="ok">
 							<span className="size-1.5 rounded-full bg-emerald-500" />
-							no uploads
+							{t("app.noUploads")}
 						</Badge>
 						{history ? (
 							<Button
@@ -247,7 +256,7 @@ function Home() {
 									setShowDetails(false);
 								}}
 							>
-								Close data
+								{t("app.closeData")}
 							</Button>
 						) : null}
 					</div>
@@ -259,25 +268,25 @@ function Home() {
 					<>
 						<div>
 							<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-								How it works
+								{t("intro.title")}
 							</h2>
 							<p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-								Three steps. Your location history never leaves this tab.
+								{t("intro.subtitle")}
 							</p>
 						</div>
 						<div className="grid gap-4 sm:grid-cols-3">
 							{[
 								{
-									title: "1. Open the export",
-									body: "Pick the Timeline.json from your phone. It is parsed locally in a worker, so even a 200 MB file will not freeze the page.",
+									title: t("intro.step1.title"),
+									body: t("intro.step1.body"),
 								},
 								{
-									title: "2. Pin work and home",
-									body: "Search an address or pick a place you already visit often. Everything inside the radius counts as time at that location.",
+									title: t("intro.step2.title"),
+									body: t("intro.step2.body"),
 								},
 								{
-									title: "3. Review and export",
-									body: "Pick the period, fix the odd day, then download a CSV with Datum + Kantoor/Thuis that HR can paste into AFAS.",
+									title: t("intro.step3.title"),
+									body: t("intro.step3.body"),
 								},
 							].map((item) => (
 								<Card key={item.title} className="p-4">
@@ -307,8 +316,8 @@ function Home() {
 						<Card>
 							<SectionHeader
 								step="1"
-								title="Your export"
-								description="Already loaded in this browser. Replace it if you have a newer export."
+								title={t("loaded.title")}
+								description={t("loaded.description")}
 								action={
 									<div className="flex items-center gap-2">
 										<Button
@@ -317,30 +326,38 @@ function Home() {
 											onClick={() => setShowDetails((value) => !value)}
 											aria-expanded={showDetails}
 										>
-											{showDetails ? "Hide details" : "Details"}
+											{showDetails
+												? t("loaded.hideDetails")
+												: t("loaded.details")}
 										</Button>
 										<Button
 											size="sm"
 											variant={showUpload ? "primary" : "secondary"}
 											onClick={() => setShowUpload((value) => !value)}
 										>
-											{showUpload ? "Done" : "Replace file"}
+											{showUpload ? t("loaded.done") : t("loaded.replace")}
 										</Button>
 									</div>
 								}
 							/>
 							<div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3 text-sm">
 								<Badge tone="muted">
-									{plural(history.files.length, "file")}
+									{t("loaded.file", { count: history.files.length })}
 								</Badge>
-								<Badge tone="info">{plural(totalVisits, "visit")}</Badge>
+								<Badge tone="info">
+									{t("loaded.visit", { count: totalVisits })}
+								</Badge>
 								{totalPoints > 0 ? (
-									<Badge tone="info">{plural(totalPoints, "point")}</Badge>
+									<Badge tone="info">
+										{t("loaded.point", { count: totalPoints })}
+									</Badge>
 								) : null}
-								{history.range ? (
+								{history.range && bounds ? (
 									<span className="text-slate-500 dark:text-slate-400">
-										{formatDate(bounds?.min ?? "", "dmy")} –{" "}
-										{formatDate(bounds?.max ?? "", "dmy")} available
+										{t("loaded.available", {
+											from: formatDay(bounds.min),
+											to: formatDay(bounds.max),
+										})}
 									</span>
 								) : null}
 								{history.warnings.length > 0 ? (
@@ -349,26 +366,27 @@ function Home() {
 										onClick={() => setShowDetails((value) => !value)}
 										className="ml-auto text-xs font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-400"
 									>
-										{plural(history.warnings.length, "warning")}
+										{t("loaded.warning", { count: history.warnings.length })}
 									</button>
 								) : null}
 							</div>
 							{showDetails ? (
 								<div className="mx-5 mb-4 space-y-1 rounded-lg bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
 									<p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-										Files
+										{t("loaded.filesHeading")}
 									</p>
 									{history.files.map((file) => (
 										<p key={file.name} className="font-mono">
-											{file.name} · {file.format} ·{" "}
-											{plural(file.visits, "visit")} ·{" "}
-											{plural(file.points, "point")}
+											{file.name} ·{" "}
+											{t(FORMAT_LABEL[file.format] ?? "format.device")} ·{" "}
+											{t("loaded.visit", { count: file.visits })} ·{" "}
+											{t("loaded.point", { count: file.points })}
 											{file.error ? ` · ${file.error}` : ""}
 										</p>
 									))}
 									{history.warnings.length > 0 ? (
 										<p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-											Warnings
+											{t("loaded.warningsHeading")}
 										</p>
 									) : null}
 									{history.warnings.map((warning) => (
@@ -453,11 +471,10 @@ function Home() {
 
 				<div className="flex flex-col items-center gap-2 pb-8 pt-2">
 					<p className="text-center text-xs text-slate-400 dark:text-slate-500">
-						Location history stays in this tab. Settings and manual overrides
-						are stored in localStorage on this device.
+						{t("footer.privacy")}
 					</p>
 					<Button size="sm" variant="ghost" onClick={resetSavedSettings}>
-						Reset saved settings
+						{t("footer.reset")}
 					</Button>
 				</div>
 			</main>

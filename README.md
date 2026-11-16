@@ -52,12 +52,21 @@ content, so the file name does not matter.
 Before you pin an office, places Google itself labels `WORK` / `HOME` are used as
 a fallback, so the app is useful immediately after parsing.
 
+## Languages
+
+The page is available in **Dutch and English**. It follows your browser language
+on first visit (anything that is not English or Dutch falls back to Dutch) and
+remembers your choice in localStorage. The language switch sits in the header.
+
+CSV labels are a separate setting and default to Dutch (`Kantoor`/`Thuis`),
+because AFAS is Dutch.
+
 ## Exporting for AFAS
 
-Defaults: semicolon delimiter, UTF-8 BOM, Dutch labels, `Datum;Dag;Locatie` plus
-office/home minutes and a note. Every column can be toggled in the export panel.
-"Other" and "No data" rows are excluded by default so you only hand HR rows you
-actually confirmed.
+Defaults: semicolon delimiter, UTF-8 BOM, Dutch labels, and
+`Datum;Locatie;Opmerking`. Weekday, minutes, first/last seen and evidence are
+optional columns in the export options. "Other" and "No data" rows are excluded
+by default so you only hand HR rows you actually confirmed.
 
 AFAS only allows a limited backfill window, so the range picker has a
 **Last 2 months** preset; export in chunks if you need more.
@@ -100,6 +109,7 @@ npx wrangler pages deploy dist
 ## Structure
 
 ```
+src/lib/i18n.tsx            i18next setup, NL/EN resources, switcher hook
 src/lib/timeline/parse.ts   Google Timeline → normalized visits + points
 src/lib/timeline/days.ts    day classification, clustering, summaries
 src/lib/csv.ts              AFAS CSV writer
@@ -109,4 +119,5 @@ src/components/             UI
 src/routes/index.tsx        the single page
 ```
 
-Built with TanStack Router (SPA mode), React 19, Vite, Tailwind CSS v4 and Biome.
+Built with TanStack Router (SPA mode), React 19, Vite, Tailwind CSS v4, Biome and
+i18next.

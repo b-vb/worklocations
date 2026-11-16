@@ -3,7 +3,13 @@ import { type ParseInput, parseTimelineJson } from "./parse";
 type Incoming = { files: File[] };
 
 type Outgoing =
-	| { type: "progress"; message: string }
+	| {
+			type: "progress";
+			phase: "reading" | "building";
+			name?: string;
+			index?: number;
+			total?: number;
+	  }
 	| { type: "done"; history: ReturnType<typeof parseTimelineJson> }
 	| { type: "error"; message: string };
 
@@ -23,13 +29,16 @@ scope.onmessage = async (event) => {
 			const file = files[index];
 			post({
 				type: "progress",
-				message: `Reading ${file.name} (${index + 1}/${files.length})…`,
+				phase: "reading",
+				name: file.name,
+				index: index + 1,
+				total: files.length,
 			});
 			const text = await file.text();
 			inputs.push({ name: file.name, bytes: file.size, text });
 		}
 
-		post({ type: "progress", message: "Building your day-by-day timeline…" });
+		post({ type: "progress", phase: "building" });
 		post({ type: "done", history: parseTimelineJson(inputs) });
 	} catch (error) {
 		post({

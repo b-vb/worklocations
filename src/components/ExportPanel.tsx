@@ -7,6 +7,7 @@ import {
 	exportRowsCount,
 	rowsToCsv,
 } from "../lib/csv";
+import { useI18n } from "../lib/i18n";
 import type { DayRow } from "../lib/timeline/days";
 import { Badge, Button, Card, cn, GearIcon, SectionHeader, Toggle } from "./ui";
 
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function ExportPanel({ rows, options, onChange }: Props) {
+	const { t } = useI18n();
 	const [view, setView] = useState<"table" | "text">("table");
 	const [showOptions, setShowOptions] = useState(false);
 	const table = useMemo(() => buildCsvTable(rows, options), [rows, options]);
@@ -42,22 +44,26 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 	};
 
 	const optionsSummary = [
-		options.delimiter === ";" ? "semicolon" : "comma",
-		options.dateStyle === "iso" ? "ISO dates" : "DD-MM-YYYY",
+		options.delimiter === ";"
+			? t("export.summarySemicolon")
+			: t("export.summaryComma"),
+		options.dateStyle === "iso"
+			? t("export.summaryIso")
+			: t("export.summaryDmy"),
 		options.labels === "nl" ? "Kantoor/Thuis" : "Office/Home",
-		options.onlyClassified ? "only classified days" : "all days",
+		options.onlyClassified ? t("export.summaryOnly") : t("export.summaryAll"),
 	].join(" · ");
 
 	return (
 		<Card>
 			<SectionHeader
 				step="5"
-				title="Export for AFAS"
-				description="Check the table, then download. The file opens in Excel."
+				title={t("export.title")}
+				description={t("export.description")}
 				action={
 					<div className="flex items-center gap-2">
 						<Badge tone={count > 0 ? "ok" : "warn"}>
-							{count} row{count === 1 ? "" : "s"}
+							{t("export.row", { count })}
 						</Badge>
 						<Button
 							size="sm"
@@ -66,7 +72,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 							aria-expanded={showOptions}
 						>
 							<GearIcon />
-							Options
+							{t("export.options")}
 						</Button>
 					</div>
 				}
@@ -77,18 +83,18 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 					<>
 						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							<Choice
-								label="Delimiter"
+								label={t("export.delimiter")}
 								value={options.delimiter}
 								options={[
-									{ value: ";", label: "Semicolon ;" },
-									{ value: ",", label: "Comma ," },
+									{ value: ";", label: t("export.semicolon") },
+									{ value: ",", label: t("export.comma") },
 								]}
 								onChange={(value) =>
 									onChange({ delimiter: value as CsvOptions["delimiter"] })
 								}
 							/>
 							<Choice
-								label="Date format"
+								label={t("export.dateFormat")}
 								value={options.dateStyle}
 								options={[
 									{ value: "iso", label: "2026-05-01" },
@@ -99,7 +105,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 								}
 							/>
 							<Choice
-								label="Location labels"
+								label={t("export.locationLabels")}
 								value={options.labels}
 								options={[
 									{ value: "nl", label: "Kantoor / Thuis" },
@@ -116,45 +122,45 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 								<Toggle
 									checked={options.onlyClassified}
 									onChange={(onlyClassified) => onChange({ onlyClassified })}
-									label="Only office/home rows"
-									hint="Leave out days that still say Other or No data."
+									label={t("export.onlyClassified")}
+									hint={t("export.onlyClassifiedHint")}
 								/>
 								<Toggle
 									checked={options.bom}
 									onChange={(bom) => onChange({ bom })}
-									label="UTF-8 BOM"
-									hint="Keeps accents intact in Excel."
+									label={t("export.bom")}
+									hint={t("export.bomHint")}
 								/>
 							</div>
 							<div>
 								<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-									Extra columns
+									{t("export.extraColumns")}
 								</p>
 								<div className="mt-2 grid grid-cols-2 gap-2">
 									<Toggle
 										checked={options.includeDay}
 										onChange={(includeDay) => onChange({ includeDay })}
-										label="Weekday"
+										label={t("export.weekday")}
 									/>
 									<Toggle
 										checked={options.includeMinutes}
 										onChange={(includeMinutes) => onChange({ includeMinutes })}
-										label="Minutes"
+										label={t("export.minutes")}
 									/>
 									<Toggle
 										checked={options.includeTimes}
 										onChange={(includeTimes) => onChange({ includeTimes })}
-										label="First/last seen"
+										label={t("export.firstLast")}
 									/>
 									<Toggle
 										checked={options.includeSource}
 										onChange={(includeSource) => onChange({ includeSource })}
-										label="Evidence"
+										label={t("export.evidence")}
 									/>
 									<Toggle
 										checked={options.includeNotes}
 										onChange={(includeNotes) => onChange({ includeNotes })}
-										label="Notes"
+										label={t("export.notes")}
 									/>
 								</div>
 							</div>
@@ -180,12 +186,12 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 					<div className="flex flex-wrap items-end justify-between gap-3">
 						<div>
 							<h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-								Preview
+								{t("export.preview")}
 							</h3>
 							<p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-								Exactly what HR gets — one row per working day.
+								{t("export.previewHint")}
 								{hiddenByFilter > 0 && options.onlyClassified
-									? ` ${hiddenByFilter} day${hiddenByFilter === 1 ? "" : "s"} left out by the filter.`
+									? ` ${t("export.leftOut", { count: hiddenByFilter })}`
 									: ""}
 							</p>
 						</div>
@@ -193,7 +199,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 							{(
 								[
 									["table", "Table"],
-									["text", "CSV text"],
+									["text", t("export.csvText")],
 								] as const
 							).map(([value, label]) => (
 								<button
@@ -240,11 +246,11 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 									d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14"
 								/>
 							</svg>
-							Download CSV
+							{t("export.download")}
 						</Button>
 						<span className="text-xs text-slate-500 dark:text-slate-400">
-							<code className="font-mono">{fileName}</code> · {count} data row
-							{count === 1 ? "" : "s"}, nothing uploaded.
+							<code className="font-mono">{fileName}</code> ·{" "}
+							{t("export.fileNote", { file: fileName, count })}
 						</span>
 					</div>
 				</div>
@@ -275,15 +281,15 @@ function PreviewTable({
 	table: ReturnType<typeof buildCsvTable>;
 	count: number;
 }) {
+	const { t } = useI18n();
 	if (count === 0) {
 		return (
 			<div className="rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center dark:border-slate-700">
 				<p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-					No rows to show yet
+					{t("export.noRowsTitle")}
 				</p>
 				<p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
-					Pin your office in step 2, widen the period in step 3, or turn off
-					&ldquo;Only office/home rows&rdquo; to see everything.
+					{t("export.noRowsHint")}
 				</p>
 			</div>
 		);
@@ -293,9 +299,7 @@ function PreviewTable({
 		<div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
 			<div className="max-h-[420px] overflow-auto">
 				<table className="w-full border-collapse text-sm">
-					<caption className="sr-only">
-						Preview of the CSV that will be downloaded
-					</caption>
+					<caption className="sr-only">{t("export.preview")}</caption>
 					<thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800">
 						<tr>
 							{table.columns.map((column) => (
@@ -340,7 +344,7 @@ function PreviewTable({
 											{column.key === "status" ? (
 												<Badge tone={statusTone(value)}>{value}</Badge>
 											) : (
-												value || "—"
+												value || t("export.emptyCell")
 											)}
 										</td>
 									);
@@ -351,10 +355,8 @@ function PreviewTable({
 				</table>
 			</div>
 			<div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-				<span>
-					{table.rows.length} row{table.rows.length === 1 ? "" : "s"}
-				</span>
-				<span>Scroll for more · headers stay visible</span>
+				<span>{t("export.row", { count: table.rows.length })}</span>
+				<span>{t("export.scrollHint")}</span>
 			</div>
 		</div>
 	);

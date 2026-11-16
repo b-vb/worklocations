@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useI18n } from "../lib/i18n";
 import { Badge, Card, cn, SectionHeader } from "./ui";
 
 type Props = {
@@ -16,6 +17,7 @@ export function DropZone({
 	error,
 	hasHistory,
 }: Props) {
+	const { t } = useI18n();
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [dragging, setDragging] = useState(false);
 
@@ -28,18 +30,14 @@ export function DropZone({
 		<Card>
 			<SectionHeader
 				step="1"
-				title={
-					hasHistory ? "Location history" : "Open your Google Timeline export"
-				}
+				title={hasHistory ? t("drop.titleAgain") : t("drop.titleFirst")}
 				description={
-					hasHistory
-						? "Drop another export to replace what is loaded — select several files at once to merge them."
-						: "The file is read in your browser only. Nothing is uploaded, and no location data ever leaves this device."
+					hasHistory ? t("drop.descriptionAgain") : t("drop.descriptionFirst")
 				}
 				action={
 					<Badge tone="ok">
 						<span className="size-1.5 rounded-full bg-emerald-500" />
-						100% local
+						{t("drop.local")}
 					</Badge>
 				}
 			/>
@@ -82,12 +80,10 @@ export function DropZone({
 						/>
 					</svg>
 					<span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-						{busy ? "Reading…" : "Drop Timeline.json here, or click to choose"}
+						{busy ? t("drop.reading") : t("drop.drop")}
 					</span>
 					<span className="max-w-md text-xs text-slate-500 dark:text-slate-400">
-						Android <code className="font-mono">Timeline.json</code>, iPhone{" "}
-						<code className="font-mono">location-history.json</code>, or an old
-						Takeout export. Several files at once are fine.
+						{t("drop.formats")}
 					</span>
 				</button>
 
@@ -118,40 +114,31 @@ export function DropZone({
 
 				<details className="mt-5 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/50">
 					<summary className="cursor-pointer font-medium text-slate-700 dark:text-slate-200">
-						Where do I get the file?
+						{t("drop.where")}
 					</summary>
 					<div className="mt-3 space-y-3 text-slate-600 dark:text-slate-300">
 						<div>
 							<p className="font-medium text-slate-700 dark:text-slate-200">
-								Android (Google Maps app)
+								{t("drop.android")}
 							</p>
 							<p className="text-xs text-slate-500 dark:text-slate-400">
-								Tap your profile picture → Settings → Location &amp; Privacy →
-								Export Timeline data. Rename the downloaded file to{" "}
-								<code className="font-mono">Timeline.json</code> if the
-								extension is missing.
+								{t("drop.androidHelp")}
 							</p>
 						</div>
 						<div>
 							<p className="font-medium text-slate-700 dark:text-slate-200">
-								iPhone (Google Maps app)
+								{t("drop.ios")}
 							</p>
 							<p className="text-xs text-slate-500 dark:text-slate-400">
-								Profile picture → Settings → Location &amp; Privacy → Export
-								Timeline data. The file is called{" "}
-								<code className="font-mono">location-history.json</code>.
+								{t("drop.iosHelp")}
 							</p>
 						</div>
 						<div>
 							<p className="font-medium text-slate-700 dark:text-slate-200">
-								Older history from Takeout
+								{t("drop.takeout")}
 							</p>
 							<p className="text-xs text-slate-500 dark:text-slate-400">
-								Google Takeout → Location History (JSON). Extract the zip and
-								select the monthly{" "}
-								<code className="font-mono">Semantic Location History</code>{" "}
-								files, or the big{" "}
-								<code className="font-mono">Records.json</code>.
+								{t("drop.takeoutHelp")}
 							</p>
 						</div>
 					</div>

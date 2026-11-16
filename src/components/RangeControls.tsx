@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useI18n } from "../lib/i18n";
 import type { AppSettings } from "../lib/settings";
 import { addDaysKey, DAY_MS, dayKey, dayKeyToWallStart } from "../lib/time";
 import {
@@ -25,11 +26,11 @@ type Props = {
 };
 
 const PRESETS = [
-	{ id: "2m", label: "Last 2 months" },
-	{ id: "6m", label: "Last 6 months" },
-	{ id: "12m", label: "Last 12 months" },
-	{ id: "year", label: "This year" },
-	{ id: "all", label: "All data" },
+	{ id: "2m", labelKey: "period.preset2m" },
+	{ id: "6m", labelKey: "period.preset6m" },
+	{ id: "12m", labelKey: "period.preset12m" },
+	{ id: "year", labelKey: "period.presetYear" },
+	{ id: "all", labelKey: "period.presetAll" },
 ] as const;
 
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -43,7 +44,27 @@ export function RangeControls({
 	onSettingsChange,
 	onContinue,
 }: Props) {
+	const { t, formatWeekday } = useI18n();
 	const [showAdvanced, setShowAdvanced] = useState(false);
+	const summaryWorkdays = () => {
+		const active = settings.workdays
+			.map((on, index) => (on ? formatWeekday(index) : null))
+			.filter((day): day is string => day !== null);
+		if (active.length === 0) return t("period.noWorkdays");
+		if (active.length === 7) return t("period.everyDay");
+		if (
+			settings.workdays[1] &&
+			settings.workdays[2] &&
+			settings.workdays[3] &&
+			settings.workdays[4] &&
+			settings.workdays[5] &&
+			!settings.workdays[0] &&
+			!settings.workdays[6]
+		) {
+			return t("period.monFri");
+		}
+		return active.join(", ");
+	};
 
 	const applyPreset = (preset: (typeof PRESETS)[number]["id"]) => {
 		if (preset === "all") {
@@ -76,8 +97,8 @@ export function RangeControls({
 		<Card>
 			<SectionHeader
 				step="3"
-				title="Which period?"
-				description="AFAS only allows a limited backfill window, so start there and export in chunks if needed."
+				title={t("period.title")}
+				description={t("period.description")}
 				action={
 					<Button
 						size="sm"
@@ -86,17 +107,17 @@ export function RangeControls({
 						aria-expanded={showAdvanced}
 					>
 						<GearIcon />
-						Options
+						{t("period.options")}
 					</Button>
 				}
 			/>
 
 			<div className="space-y-5 p-5">
 				<div className="flex flex-wrap items-end gap-3">
-					<Field label="From" className="w-full sm:w-40">
+					<Field label={t("period.from")} className="w-full sm:w-40">
 						<TextInput
 							type="date"
-							aria-label="Period from"
+							aria-label={t("period.from")}
 							value={range.from}
 							min={bounds.min}
 							max={range.to}
@@ -105,10 +126,10 @@ export function RangeControls({
 							}
 						/>
 					</Field>
-					<Field label="To" className="w-full sm:w-40">
+					<Field label={t("period.to")} className="w-full sm:w-40">
 						<TextInput
 							type="date"
-							aria-label="Period to"
+							aria-label={t("period.to")}
 							value={range.to}
 							min={range.from}
 							max={bounds.max}
@@ -124,7 +145,7 @@ export function RangeControls({
 								size="sm"
 								onClick={() => applyPreset(preset.id)}
 							>
-								{preset.label}
+								{t(preset.labelKey)}
 							</Button>
 						))}
 					</div>
@@ -134,7 +155,7 @@ export function RangeControls({
 					<div className="grid gap-6 border-t border-slate-100 pt-5 md:grid-cols-2 dark:border-slate-800">
 						<div>
 							<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-								Working days
+								{t("period.workingDays")}
 							</p>
 							<div className="mt-2 flex gap-1.5">
 								{WEEKDAY_ORDER.map((weekday, index) => (
@@ -163,21 +184,18 @@ export function RangeControls({
 									onChange={(excludeHolidays) =>
 										onSettingsChange({ excludeHolidays })
 									}
-									label="Skip Dutch public holidays"
-									hint="Easter-based, Koningsdag, Christmas, and friends. Override any day manually in the table."
+									label={t("period.holidays")}
+									hint={t("period.holidaysHint")}
 								/>
 							</div>
 						</div>
 
 						<div>
-							<Field
-								label="Working hours"
-								hint="Only time inside this window decides whether a day is office, home, or other. Sleep and evenings are ignored."
-							>
+							<Field label={t("period.window")} hint={t("period.windowHint")}>
 								<div className="flex items-center gap-2">
 									<TextInput
 										type="number"
-										aria-label="Working hours start"
+										aria-label={t("period.windowStartAria")}
 										min={0}
 										max={23}
 										value={settings.windowStartHour}
@@ -192,11 +210,11 @@ export function RangeControls({
 										className="w-20"
 									/>
 									<span className="text-sm text-slate-500 dark:text-slate-400">
-										to
+										{t("period.to")}
 									</span>
 									<TextInput
 										type="number"
-										aria-label="Working hours end"
+										aria-label={t("period.windowEndAria")}
 										min={1}
 										max={24}
 										value={settings.windowEndHour}
@@ -211,7 +229,7 @@ export function RangeControls({
 										className="w-20"
 									/>
 									<span className="text-sm text-slate-500 dark:text-slate-400">
-										hours
+										{t("period.hours")}
 									</span>
 								</div>
 							</Field>
@@ -219,13 +237,13 @@ export function RangeControls({
 
 						<div>
 							<Field
-								label="Minimum time at the office"
-								hint="Days with less office time than this are classified as home (or flagged for review)."
+								label={t("period.minOffice")}
+								hint={t("period.minOfficeHint")}
 							>
 								<div className="flex items-center gap-2">
 									<TextInput
 										type="number"
-										aria-label="Minimum time at the office in minutes"
+										aria-label={t("period.minOffice")}
 										min={0}
 										max={720}
 										step={15}
@@ -241,7 +259,7 @@ export function RangeControls({
 										className="w-24"
 									/>
 									<span className="text-sm text-slate-500 dark:text-slate-400">
-										minutes
+										{t("period.minutes")}
 									</span>
 								</div>
 							</Field>
@@ -267,16 +285,19 @@ export function RangeControls({
 					</div>
 				) : (
 					<p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-						{workdaysSummary(settings.workdays)} ·{" "}
+						{summaryWorkdays()} ·{" "}
 						{String(settings.windowStartHour).padStart(2, "0")}:00–
-						{String(settings.windowEndHour).padStart(2, "0")}:00 · office ≥{" "}
-						{settings.minOfficeMinutes > 0
-							? formatDuration(settings.minOfficeMinutes)
-							: "0m"}{" "}
+						{String(settings.windowEndHour).padStart(2, "0")}:00 ·{" "}
+						{t("period.officeAtLeast", {
+							min:
+								settings.minOfficeMinutes > 0
+									? formatDuration(settings.minOfficeMinutes)
+									: "0m",
+						})}{" "}
 						·{" "}
 						{settings.excludeHolidays
-							? "holidays skipped"
-							: "holidays included"}
+							? t("period.holidaysSkipped")
+							: t("period.holidaysIncluded")}
 					</p>
 				)}
 			</div>
@@ -284,10 +305,10 @@ export function RangeControls({
 			{onContinue ? (
 				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
 					<p className="text-xs text-slate-500 dark:text-slate-400">
-						Changing the period updates the day table below instantly.
+						{t("period.nextHint")}
 					</p>
 					<Button variant="primary" size="sm" onClick={onContinue}>
-						Next: check the days
+						{t("period.next")}
 					</Button>
 				</div>
 			) : null}
@@ -308,26 +329,4 @@ export function rangeBounds(
 function clampHour(value: number, fallback: number): number {
 	if (!Number.isFinite(value)) return fallback;
 	return Math.min(24, Math.max(0, Math.round(value)));
-}
-
-const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function workdaysSummary(workdays: boolean[]): string {
-	const active = workdays
-		.map((on, index) => (on ? WEEKDAY_SHORT[index] : null))
-		.filter((day): day is string => day !== null);
-	if (active.length === 0) return "no working days";
-	if (active.length === 7) return "every day";
-	if (
-		workdays[1] &&
-		workdays[2] &&
-		workdays[3] &&
-		workdays[4] &&
-		workdays[5] &&
-		!workdays[0] &&
-		!workdays[6]
-	) {
-		return "Mon–Fri";
-	}
-	return active.join(", ");
 }

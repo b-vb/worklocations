@@ -5,6 +5,7 @@ import {
 	currentPosition,
 	searchAddress,
 } from "../lib/geocode";
+import { useI18n } from "../lib/i18n";
 import type { AppSettings } from "../lib/settings";
 import { type PlaceCluster, suggestPlace } from "../lib/timeline/days";
 import { PlaceMap } from "./PlaceMap";
@@ -23,6 +24,7 @@ export function PlaceSetup({
 	onChange,
 	onContinue,
 }: Props) {
+	const { t } = useI18n();
 	const [query, setQuery] = useState("");
 	const [results, setResults] = useState<AddressResult[]>([]);
 	const [searching, setSearching] = useState(false);
@@ -54,14 +56,14 @@ export function PlaceSetup({
 					if (cancelled) return;
 					setResults(matches);
 					if (matches.length === 0) {
-						setSearchError("No address found. Try a street name and city.");
+						setSearchError(t("places.noAddress"));
 					}
 				})
 				.catch((error: unknown) => {
 					if (cancelled) return;
 					if (error instanceof Error && error.name === "AbortError") return;
 					setSearchError(
-						error instanceof Error ? error.message : "Address lookup failed.",
+						error instanceof Error ? error.message : t("places.searchFailed"),
 					);
 				})
 				.finally(() => {
@@ -74,7 +76,7 @@ export function PlaceSetup({
 			controller.abort();
 			clearTimeout(timer);
 		};
-	}, [query]);
+	}, [query, t]);
 
 	const applyOffice = (lat: number, lng: number, label: string) => {
 		onChange({
@@ -105,10 +107,10 @@ export function PlaceSetup({
 		setLocationError(null);
 		try {
 			const position = await currentPosition();
-			applyOffice(position.lat, position.lng, "Current location");
+			applyOffice(position.lat, position.lng, t("places.currentLocation"));
 		} catch (error) {
 			setLocationError(
-				error instanceof Error ? error.message : "Could not get your location.",
+				error instanceof Error ? error.message : t("places.geoFailed"),
 			);
 		} finally {
 			setLocating(false);
@@ -120,10 +122,10 @@ export function PlaceSetup({
 
 	const handleMapPick = (point: LatLng) => {
 		if (pickTarget === "home") {
-			applyHome(point.lat, point.lng, home?.label ?? "Picked on map");
+			applyHome(point.lat, point.lng, home?.label ?? t("places.pinned"));
 			return;
 		}
-		applyOffice(point.lat, point.lng, office?.label ?? "Picked on map");
+		applyOffice(point.lat, point.lng, office?.label ?? t("places.pinned"));
 	};
 
 	const workSuggestion =
@@ -134,15 +136,15 @@ export function PlaceSetup({
 			<Card>
 				<SectionHeader
 					step="2"
-					title="Work and home"
-					description="Pick a suggestion, or open the map to choose the exact spot."
+					title={t("places.title")}
+					description={t("places.description")}
 					action={
 						<Button
 							size="sm"
 							variant="secondary"
 							onClick={() => setEditing(true)}
 						>
-							Edit on map
+							{t("places.editOnMap")}
 						</Button>
 					}
 				/>
@@ -151,21 +153,21 @@ export function PlaceSetup({
 					<div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
 						<div className="flex items-center justify-between gap-2">
 							<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-								Office
+								{t("places.office")}
 							</span>
 							{office ? (
-								<Badge tone="office">set</Badge>
+								<Badge tone="office">{t("places.set")}</Badge>
 							) : (
-								<Badge tone="other">needed</Badge>
+								<Badge tone="other">{t("places.needed")}</Badge>
 							)}
 						</div>
 						{office ? (
 							<>
 								<p className="mt-2 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-									{office.label || "Pinned on the map"}
+									{office.label || t("places.pinned")}
 								</p>
 								<p className="text-[11px] text-slate-500 dark:text-slate-400">
-									{office.radiusMeters} m radius
+									{t("places.radius", { radius: office.radiusMeters })}
 								</p>
 								<Button
 									size="sm"
@@ -173,13 +175,13 @@ export function PlaceSetup({
 									className="mt-2 -ml-2"
 									onClick={() => setEditing(true)}
 								>
-									Change
+									{t("places.change")}
 								</Button>
 							</>
 						) : (
 							<>
 								<p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-									Everything inside this radius counts as a day at the office.
+									{t("places.officeHint")}
 								</p>
 								<div className="mt-2 flex flex-wrap gap-2">
 									{workSuggestion ? (
@@ -190,11 +192,11 @@ export function PlaceSetup({
 												applyOffice(
 													workSuggestion.lat,
 													workSuggestion.lng,
-													"Work (from Google)",
+													t("places.workFromGoogle"),
 												)
 											}
 										>
-											Use Google&rsquo;s WORK place
+											{t("places.useWork")}
 										</Button>
 									) : null}
 									<Button
@@ -202,7 +204,7 @@ export function PlaceSetup({
 										variant="secondary"
 										onClick={() => setEditing(true)}
 									>
-										Pick on map
+										{t("places.pickOnMap")}
 									</Button>
 								</div>
 							</>
@@ -212,21 +214,21 @@ export function PlaceSetup({
 					<div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
 						<div className="flex items-center justify-between gap-2">
 							<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-								Home
+								{t("places.home")}
 							</span>
 							{home ? (
-								<Badge tone="home">set</Badge>
+								<Badge tone="home">{t("places.set")}</Badge>
 							) : (
-								<Badge tone="muted">auto</Badge>
+								<Badge tone="muted">{t("places.auto")}</Badge>
 							)}
 						</div>
 						{home ? (
 							<>
 								<p className="mt-2 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-									{home.label || "Pinned on the map"}
+									{home.label || t("places.pinned")}
 								</p>
 								<p className="text-[11px] text-slate-500 dark:text-slate-400">
-									{home.radiusMeters} m radius
+									{t("places.radius", { radius: home.radiusMeters })}
 								</p>
 								<Button
 									size="sm"
@@ -234,14 +236,13 @@ export function PlaceSetup({
 									className="mt-2 -ml-2"
 									onClick={() => setEditing(true)}
 								>
-									Change
+									{t("places.change")}
 								</Button>
 							</>
 						) : (
 							<>
 								<p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-									Using the place Google labels HOME. Pin it for sharper
-									results.
+									{t("places.homeHint")}
 								</p>
 								<div className="mt-2 flex flex-wrap gap-2">
 									{suggestedHome ? (
@@ -252,11 +253,11 @@ export function PlaceSetup({
 												applyHome(
 													suggestedHome.lat,
 													suggestedHome.lng,
-													"Home (from Google)",
+													t("places.homeFromGoogle"),
 												)
 											}
 										>
-											Use suggested home
+											{t("places.useHome")}
 										</Button>
 									) : null}
 									<Button
@@ -264,7 +265,7 @@ export function PlaceSetup({
 										variant="ghost"
 										onClick={() => setEditing(true)}
 									>
-										Pick on map
+										{t("places.pickOnMap")}
 									</Button>
 								</div>
 							</>
@@ -274,13 +275,11 @@ export function PlaceSetup({
 
 				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
 					<p className="text-xs text-slate-500 dark:text-slate-400">
-						{office
-							? "Saved in this browser, so you only have to do this once."
-							: "Set an office to unlock the period, the day table and the export."}
+						{office ? t("places.footerSaved") : t("places.footerNeeded")}
 					</p>
 					{office && onContinue ? (
 						<Button variant="primary" size="sm" onClick={onContinue}>
-							Next: choose the period
+							{t("places.next")}
 						</Button>
 					) : null}
 				</div>
@@ -292,19 +291,19 @@ export function PlaceSetup({
 		<Card>
 			<SectionHeader
 				step="2"
-				title="Where is the office?"
-				description="Click the map or drag the pins. Every minute inside a radius counts as time at that place."
+				title={t("places.editorTitle")}
+				description={t("places.editorDescription")}
 				action={
 					<div className="flex items-center gap-2">
 						{workSuggestion ? (
-							<Badge tone="info">Google labelled WORK found</Badge>
+							<Badge tone="info">{t("places.workFound")}</Badge>
 						) : null}
 						<Button
 							size="sm"
 							variant="secondary"
 							onClick={() => setEditing(false)}
 						>
-							Done
+							{t("places.done")}
 						</Button>
 					</div>
 				}
@@ -329,13 +328,13 @@ export function PlaceSetup({
 			<div className="grid gap-6 px-5 pb-5 pt-4 lg:grid-cols-2">
 				<div className="space-y-4">
 					<Field
-						label="Office address, coordinates, or Google Maps link"
-						hint="Address lookups go to OpenStreetMap's Photon service. Nothing else leaves your browser."
+						label={t("places.addressLabel")}
+						hint={t("places.addressHint")}
 					>
 						<TextInput
 							value={query}
-							aria-label="Office address, coordinates or Google Maps link"
-							placeholder="e.g. Barbara Strozzilaan 201, Amsterdam"
+							aria-label={t("places.addressLabel")}
+							placeholder={t("places.addressPlaceholder")}
 							onChange={(event) => setQuery(event.target.value)}
 						/>
 					</Field>
@@ -348,13 +347,13 @@ export function PlaceSetup({
 								applyOffice(direct.lat, direct.lng, formatLatLng(direct))
 							}
 						>
-							Use coordinates {formatLatLng(direct, 4)}
+							{t("places.useCoords", { coords: formatLatLng(direct, 4) })}
 						</Button>
 					) : null}
 
 					{searching ? (
 						<p className="text-xs text-slate-500 dark:text-slate-400">
-							Searching…
+							{t("places.searching")}
 						</p>
 					) : null}
 
@@ -389,7 +388,7 @@ export function PlaceSetup({
 
 					<div className="flex flex-wrap gap-2">
 						<Button size="sm" onClick={useCurrentLocation} disabled={locating}>
-							{locating ? "Locating…" : "Use my current location"}
+							{locating ? t("places.locating") : t("places.useCurrent")}
 						</Button>
 						{office ? (
 							<Button
@@ -397,7 +396,7 @@ export function PlaceSetup({
 								variant="danger"
 								onClick={() => onChange({ office: null })}
 							>
-								Clear office
+								{t("places.clearOffice")}
 							</Button>
 						) : null}
 					</div>
@@ -412,13 +411,13 @@ export function PlaceSetup({
 							<div className="flex items-center justify-between gap-2">
 								<div>
 									<p className="text-sm font-medium text-indigo-900 dark:text-indigo-200">
-										{office.label || "Office"}
+										{office.label || t("places.office")}
 									</p>
 									<p className="font-mono text-[11px] text-indigo-700/70 dark:text-indigo-300/70">
 										{formatLatLng(office)}
 									</p>
 								</div>
-								<Badge tone="office">office</Badge>
+								<Badge tone="office">{t("places.officeBadge")}</Badge>
 							</div>
 							<RadiusSlider
 								radius={office.radiusMeters}
@@ -430,8 +429,7 @@ export function PlaceSetup({
 					) : (
 						<div className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-700">
 							<p className="text-xs text-slate-500 dark:text-slate-400">
-								No office set yet. Until then, places Google labels{" "}
-								<code className="font-mono">WORK</code> are treated as office.
+								{t("places.officeEmpty")}
 							</p>
 							{suggestedWork ? (
 								<Button
@@ -443,14 +441,14 @@ export function PlaceSetup({
 											suggestedWork.lat,
 											suggestedWork.lng,
 											suggestedWork.label === "WORK"
-												? "Work (from Google)"
-												: "Most visited place",
+												? t("places.workFromGoogle")
+												: t("places.mostVisited"),
 										)
 									}
 								>
 									{suggestedWork.label === "WORK"
-										? "Use Google's WORK place"
-										: "Use most visited place"}
+										? t("places.useWork")
+										: t("places.useMostVisited")}
 								</Button>
 							) : null}
 						</div>
@@ -460,12 +458,10 @@ export function PlaceSetup({
 						<div className="flex items-center justify-between gap-2">
 							<div>
 								<p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
-									{home?.label ?? "Home — auto"}
+									{home?.label ?? t("places.homeAuto")}
 								</p>
 								<p className="text-[11px] text-emerald-800/70 dark:text-emerald-300/70">
-									{home
-										? formatLatLng(home)
-										: "Using Google's HOME label. Pin it for sharper results."}
+									{home ? formatLatLng(home) : t("places.homeAutoHint")}
 								</p>
 							</div>
 							<div className="flex items-center gap-2">
@@ -476,11 +472,11 @@ export function PlaceSetup({
 											applyHome(
 												suggestedHome.lat,
 												suggestedHome.lng,
-												suggestedHome.label ?? "Suggested home",
+												suggestedHome.label ?? t("places.home"),
 											)
 										}
 									>
-										Use suggested
+										{t("places.useSuggested")}
 									</Button>
 								) : null}
 								{home ? (
@@ -489,7 +485,7 @@ export function PlaceSetup({
 										variant="ghost"
 										onClick={() => onChange({ home: null })}
 									>
-										Auto
+										{t("places.autoHome")}
 									</Button>
 								) : null}
 							</div>
@@ -507,10 +503,10 @@ export function PlaceSetup({
 
 				<div>
 					<p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-						Places you spend time
+						{t("places.frequent")}
 					</p>
 					<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-						Based on your own history. One click to pin office or home.
+						{t("places.frequentHint")}
 					</p>
 					<ul className="mt-3 space-y-2">
 						{clusters.slice(0, 7).map((place) => {
@@ -530,22 +526,24 @@ export function PlaceSetup({
 									<div className="min-w-0">
 										<p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
 											{place.label === "WORK"
-												? "Work"
+												? t("places.work")
 												: place.label === "HOME"
-													? "Home"
-													: "Frequent place"}
+													? t("places.home")
+													: t("places.frequentPlace")}
 											<span className="ml-2 font-mono text-[11px] font-normal text-slate-400">
 												{formatLatLng(place, 4)}
 											</span>
 										</p>
 										<p className="text-[11px] text-slate-500 dark:text-slate-400">
-											{Math.round(place.minutes / 60)}h total · {place.days}{" "}
-											days
+											{t("places.frequentSummary", {
+												hours: Math.round(place.minutes / 60),
+												days: place.days,
+											})}
 										</p>
 									</div>
 									<div className="flex gap-1">
 										{isOffice ? (
-											<Badge tone="office">office</Badge>
+											<Badge tone="office">{t("places.officeBadge")}</Badge>
 										) : (
 											<Button
 												size="sm"
@@ -554,24 +552,28 @@ export function PlaceSetup({
 													applyOffice(
 														place.lat,
 														place.lng,
-														place.label ?? "Office",
+														place.label ?? t("places.office"),
 													)
 												}
 											>
-												Office
+												{t("places.office")}
 											</Button>
 										)}
 										{isHome ? (
-											<Badge tone="home">home</Badge>
+											<Badge tone="home">{t("places.homeBadge")}</Badge>
 										) : (
 											<Button
 												size="sm"
 												variant="ghost"
 												onClick={() =>
-													applyHome(place.lat, place.lng, place.label ?? "Home")
+													applyHome(
+														place.lat,
+														place.lng,
+														place.label ?? t("places.home"),
+													)
 												}
 											>
-												Home
+												{t("places.home")}
 											</Button>
 										)}
 									</div>
@@ -580,7 +582,7 @@ export function PlaceSetup({
 						})}
 						{clusters.length === 0 ? (
 							<li className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-								No places found yet.
+								{t("places.noPlaces")}
 							</li>
 						) : null}
 					</ul>
@@ -589,17 +591,15 @@ export function PlaceSetup({
 
 			<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
 				<p className="text-xs text-slate-500 dark:text-slate-400">
-					{office
-						? "These settings are saved in this browser, so you only have to do this once."
-						: "Set an office to unlock the period, the day table and the export."}
+					{office ? t("places.footerSaved") : t("places.footerNeeded")}
 				</p>
 				{office && onContinue ? (
 					<Button variant="primary" size="sm" onClick={onContinue}>
-						Next: choose the period
+						{t("places.next")}
 					</Button>
 				) : (
 					<Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-						Back to suggestions
+						{t("places.back")}
 					</Button>
 				)}
 			</div>
@@ -614,10 +614,11 @@ function RadiusSlider({
 	radius: number;
 	onChange: (radius: number) => void;
 }) {
+	const { t } = useI18n();
 	return (
 		<label className="mt-3 block">
 			<span className="flex items-center justify-between text-[11px] font-medium text-slate-600 dark:text-slate-300">
-				Radius
+				{t("places.radiusLabel")}
 				<span className="font-mono tabular-nums">{radius} m</span>
 			</span>
 			<input

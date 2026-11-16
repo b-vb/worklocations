@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../lib/i18n";
 import { Button, Card } from "./ui";
 
 type LocalFile = { name: string; size: number };
@@ -20,6 +21,7 @@ export function LocalDataPanel({
 	onFile: (file: File) => void;
 	disabled: boolean;
 }) {
+	const { t } = useI18n();
 	const [files, setFiles] = useState<LocalFile[]>([]);
 	const [loading, setLoading] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function LocalDataPanel({
 			onFile(new File([text], name, { type: "application/json" }));
 		} catch (caught) {
 			setError(
-				caught instanceof Error ? caught.message : "Could not read the file.",
+				caught instanceof Error ? caught.message : t("local.readFailed"),
 			);
 		} finally {
 			setLoading(null);
@@ -63,7 +65,7 @@ export function LocalDataPanel({
 		<Card className="p-4">
 			<div className="flex flex-wrap items-center gap-2">
 				<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-					Found in ./data
+					{t("local.title")}
 				</span>
 				{files.map((file) => (
 					<Button
@@ -72,7 +74,7 @@ export function LocalDataPanel({
 						disabled={disabled || loading !== null}
 						onClick={() => load(file.name)}
 					>
-						{loading === file.name ? "Loading…" : file.name}
+						{loading === file.name ? t("local.loading") : file.name}
 						<span className="font-mono text-[10px] text-slate-400">
 							{formatBytes(file.size)}
 						</span>
