@@ -17,8 +17,7 @@ Then either:
 
 - drag your `Timeline.json` / `location-history.json` onto the page, or
 - drop it in [`data/`](./data/README.md) and click it under **Found in ./data**
-  (dev server only), or
-- click **Load demo data** to try the whole flow with six months of fake history.
+  (dev server only).
 
 ## Getting the export
 

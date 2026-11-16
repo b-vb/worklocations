@@ -12,7 +12,6 @@ import {
 } from "../components/RangeControls";
 import { Summary } from "../components/Summary";
 import { Badge, Button, Card } from "../components/ui";
-import { createDemoHistory } from "../lib/demo";
 import { holidaysInRange } from "../lib/holidays";
 import {
 	type AppSettings,
@@ -203,7 +202,6 @@ function Home() {
 					<>
 						<DropZone
 							onFiles={handleFiles}
-							onDemo={() => applyHistory(createDemoHistory())}
 							busy={busy}
 							progress={progress}
 							error={error}
@@ -296,7 +294,6 @@ function Home() {
 
 						<DropZone
 							onFiles={handleFiles}
-							onDemo={() => applyHistory(createDemoHistory())}
 							busy={busy}
 							progress={progress}
 							error={error}

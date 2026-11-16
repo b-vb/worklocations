@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
-import { Badge, Button, Card, cn, SectionHeader } from "./ui";
+import { Badge, Card, cn, SectionHeader } from "./ui";
 
 type Props = {
 	onFiles: (files: File[]) => void;
-	onDemo: () => void;
 	busy: boolean;
 	progress: string | null;
 	error: string | null;
@@ -12,7 +11,6 @@ type Props = {
 
 export function DropZone({
 	onFiles,
-	onDemo,
 	busy,
 	progress,
 	error,
@@ -117,15 +115,6 @@ export function DropZone({
 						{error}
 					</p>
 				) : null}
-
-				<div className="mt-5 flex flex-wrap items-center gap-2">
-					<Button variant="ghost" size="sm" onClick={onDemo} disabled={busy}>
-						Load demo data instead
-					</Button>
-					<span className="text-xs text-slate-400 dark:text-slate-500">
-						Six months of made-up history, so you can try the flow right now.
-					</span>
-				</div>
 
 				<details className="mt-5 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/50">
 					<summary className="cursor-pointer font-medium text-slate-700 dark:text-slate-200">
