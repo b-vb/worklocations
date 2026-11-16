@@ -36,7 +36,8 @@ content, so the file name does not matter.
 ## How days are classified
 
 1. Every visit is measured against two circles: the office and home, each with a
-   radius you control (default 150 m / 120 m).
+   radius you control (default 150 m / 120 m). Pick them on the map, search an
+   address, drag a pin, or click a place you already visit often.
 2. Visits inside the office radius count as office time; inside the home radius
    as home time; everything else as "other".
 3. Overlapping records are merged, so a nested visit (a lunch spot inside the
@@ -66,9 +67,11 @@ AFAS only allows a limited backfill window, so the range picker has a
 
 - Files are read with the File API and parsed in a Web Worker. No upload, no
   server, no analytics.
-- The only network call is an optional address search, which sends the text you
-  typed to OpenStreetMap's [Photon](https://photon.komoot.io/) service. Use
-  coordinates or a Google Maps link instead if you prefer zero lookups.
+- Two optional network calls, both only when you use them: address search sends
+  the text you typed to OpenStreetMap's [Photon](https://photon.komoot.io/)
+  service, and the map requests tiles from CARTO/OpenStreetMap for the area you
+  are looking at. No location history is ever sent to either. Use coordinates or
+  a Google Maps link if you prefer zero lookups.
 - Office/home settings and manual day overrides are stored in `localStorage` on
   this device. The timeline itself is not persisted.
 

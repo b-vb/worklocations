@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatLatLng, parseCoordinateInput } from "../lib/geo";
+import { formatLatLng, type LatLng, parseCoordinateInput } from "../lib/geo";
 import {
 	type AddressResult,
 	currentPosition,
@@ -7,6 +7,7 @@ import {
 } from "../lib/geocode";
 import type { AppSettings } from "../lib/settings";
 import { type PlaceCluster, suggestPlace } from "../lib/timeline/days";
+import { PlaceMap } from "./PlaceMap";
 import { Badge, Button, Card, Field, SectionHeader, TextInput } from "./ui";
 
 type Props = {
@@ -22,6 +23,7 @@ export function PlaceSetup({ settings, clusters, onChange }: Props) {
 	const [searchError, setSearchError] = useState<string | null>(null);
 	const [locating, setLocating] = useState(false);
 	const [locationError, setLocationError] = useState<string | null>(null);
+	const [pickTarget, setPickTarget] = useState<"office" | "home">("office");
 
 	const office = settings.office;
 	const home = settings.home;
@@ -109,12 +111,20 @@ export function PlaceSetup({ settings, clusters, onChange }: Props) {
 	const suggestedWork = suggestPlace(clusters, "WORK");
 	const suggestedHome = suggestPlace(clusters, "HOME", home);
 
+	const handleMapPick = (point: LatLng) => {
+		if (pickTarget === "home") {
+			applyHome(point.lat, point.lng, home?.label ?? "Picked on map");
+			return;
+		}
+		applyOffice(point.lat, point.lng, office?.label ?? "Picked on map");
+	};
+
 	return (
 		<Card>
 			<SectionHeader
 				step="2"
 				title="Where is the office?"
-				description="Every minute inside this radius counts as office time. Home is detected the same way."
+				description="Click the map or drag the pins. Every minute inside a radius counts as time at that place."
 				action={
 					<Badge tone="info">
 						{suggestedWork?.label === "WORK"
@@ -124,7 +134,27 @@ export function PlaceSetup({ settings, clusters, onChange }: Props) {
 				}
 			/>
 
-			<div className="grid gap-6 p-5 lg:grid-cols-2">
+			<div className="px-5 pt-5">
+				<PlaceMap
+					office={office}
+					home={home}
+					pickTarget={pickTarget}
+					onPickTargetChange={setPickTarget}
+					onPick={handleMapPick}
+					onMoveOffice={(point) => {
+						if (office) onChange({ office: { ...office, ...point } });
+					}}
+					onMoveHome={(point) => {
+						if (home) onChange({ home: { ...home, ...point } });
+					}}
+				/>
+				<p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+					Tiles are loaded from OpenStreetMap/CARTO only while this map is
+					visible. Your location history is never sent to them.
+				</p>
+			</div>
+
+			<div className="grid gap-6 px-5 pb-5 pt-4 lg:grid-cols-2">
 				<div className="space-y-4">
 					<Field
 						label="Office address, coordinates, or Google Maps link"

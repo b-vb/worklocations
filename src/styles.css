@@ -30,3 +30,39 @@ body {
 input[type="date"]::-webkit-calendar-picker-indicator {
 	cursor: pointer;
 }
+
+/* Leaflet sits inside a rounded card, so keep its chrome quiet. */
+.commute-map-pin {
+	background: transparent;
+	border: none;
+}
+
+.leaflet-container {
+	font-family: var(--font-sans);
+	background: #eef2f7;
+}
+
+@media (prefers-color-scheme: dark) {
+	.leaflet-container {
+		background: #0f172a;
+	}
+
+	.leaflet-bar a {
+		background: #1e293b;
+		border-color: #334155;
+		color: #e2e8f0;
+	}
+
+	.leaflet-bar a:hover {
+		background: #334155;
+	}
+
+	.leaflet-control-attribution {
+		background: rgba(15, 23, 42, 0.75) !important;
+		color: #cbd5e1 !important;
+	}
+
+	.leaflet-control-attribution a {
+		color: #93c5fd !important;
+	}
+}
