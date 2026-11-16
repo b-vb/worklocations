@@ -35,7 +35,7 @@ export function DropZone({
 				}
 				description={
 					hasHistory
-						? "Drop another export to replace or extend what is loaded."
+						? "Drop another export to replace what is loaded — select several files at once to merge them."
 						: "The file is read in your browser only. Nothing is uploaded, and no location data ever leaves this device."
 				}
 				action={

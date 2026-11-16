@@ -180,7 +180,7 @@ function Home() {
 					<div className="flex items-center gap-2">
 						<Badge tone="ok">
 							<span className="size-1.5 rounded-full bg-emerald-500" />
-							runs offline
+							no uploads
 						</Badge>
 						{history ? (
 							<Button
