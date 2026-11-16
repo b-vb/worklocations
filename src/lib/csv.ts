@@ -120,27 +120,61 @@ function formatMinutes(minutes: number): string {
 	return String(Math.round(minutes));
 }
 
-export function rowsToCsv(rows: DayRow[], options: CsvOptions): string {
+export type CsvColumnKey =
+	| "date"
+	| "day"
+	| "status"
+	| "officeMinutes"
+	| "homeMinutes"
+	| "first"
+	| "last"
+	| "source"
+	| "note";
+
+export type CsvColumn = { key: CsvColumnKey; header: string };
+
+export type CsvTable = {
+	columns: CsvColumn[];
+	/** Cell values in the same order as `columns`. */
+	rows: string[][];
+};
+
+type ColumnWriter = CsvColumn & { value: (row: DayRow) => string };
+
+function columnWriters(options: CsvOptions): ColumnWriter[] {
 	const headers = HEADERS[options.labels];
 	const statusLabels = STATUS_LABELS[options.labels];
 	const weekdays = WEEKDAYS[options.labels];
 
-	const columns: Array<{ header: string; value: (row: DayRow) => string }> = [
+	return [
 		{
+			key: "date",
 			header: headers.date,
 			value: (row) => formatDate(row.date, options.dateStyle),
 		},
 		...(options.includeDay
-			? [{ header: headers.day, value: (row: DayRow) => weekdays[row.weekday] }]
+			? [
+					{
+						key: "day" as const,
+						header: headers.day,
+						value: (row: DayRow) => weekdays[row.weekday],
+					},
+				]
 			: []),
-		{ header: headers.status, value: (row) => statusLabels[row.finalStatus] },
+		{
+			key: "status",
+			header: headers.status,
+			value: (row) => statusLabels[row.finalStatus],
+		},
 		...(options.includeMinutes
 			? [
 					{
+						key: "officeMinutes" as const,
 						header: headers.officeMinutes,
 						value: (row: DayRow) => formatMinutes(row.officeMinutes),
 					},
 					{
+						key: "homeMinutes" as const,
 						header: headers.homeMinutes,
 						value: (row: DayRow) => formatMinutes(row.homeMinutes),
 					},
@@ -149,10 +183,12 @@ export function rowsToCsv(rows: DayRow[], options: CsvOptions): string {
 		...(options.includeTimes
 			? [
 					{
+						key: "first" as const,
 						header: headers.first,
 						value: (row: DayRow) => clockCell(row.firstWall),
 					},
 					{
+						key: "last" as const,
 						header: headers.last,
 						value: (row: DayRow) => clockCell(row.lastWall),
 					},
@@ -161,6 +197,7 @@ export function rowsToCsv(rows: DayRow[], options: CsvOptions): string {
 		...(options.includeSource
 			? [
 					{
+						key: "source" as const,
 						header: headers.source,
 						value: (row: DayRow) => sourceFor(row, options.labels),
 					},
@@ -169,26 +206,47 @@ export function rowsToCsv(rows: DayRow[], options: CsvOptions): string {
 		...(options.includeNotes
 			? [
 					{
+						key: "note" as const,
 						header: headers.note,
 						value: (row: DayRow) => noteFor(row, options.labels),
 					},
 				]
 			: []),
 	];
+}
 
-	const lines = [
-		columns.map((column) => column.header).join(options.delimiter),
-	];
-	const exportRows = rows.filter(
+export function csvRows(rows: DayRow[], options: CsvOptions): DayRow[] {
+	return rows.filter(
 		(row) =>
 			row.included &&
 			(!options.onlyClassified ||
 				(row.finalStatus !== "no-data" && row.finalStatus !== "other")),
 	);
+}
 
-	for (const row of exportRows) {
+/**
+ * The same rows and columns the CSV gets, but as plain values. The UI renders
+ * this as a table, which keeps the preview honest.
+ */
+export function buildCsvTable(rows: DayRow[], options: CsvOptions): CsvTable {
+	const writers = columnWriters(options);
+	return {
+		columns: writers.map(({ key, header }) => ({ key, header })),
+		rows: csvRows(rows, options).map((row) =>
+			writers.map((writer) => writer.value(row)),
+		),
+	};
+}
+
+export function rowsToCsv(rows: DayRow[], options: CsvOptions): string {
+	const writers = columnWriters(options);
+	const lines = [
+		writers.map((column) => column.header).join(options.delimiter),
+	];
+
+	for (const row of csvRows(rows, options)) {
 		lines.push(
-			columns
+			writers
 				.map((column) => escapeCell(column.value(row), options.delimiter))
 				.join(options.delimiter),
 		);
@@ -211,10 +269,5 @@ export function csvFileName(from: string, to: string): string {
 }
 
 export function exportRowsCount(rows: DayRow[], options: CsvOptions): number {
-	return rows.filter(
-		(row) =>
-			row.included &&
-			(!options.onlyClassified ||
-				(row.finalStatus !== "no-data" && row.finalStatus !== "other")),
-	).length;
+	return csvRows(rows, options).length;
 }

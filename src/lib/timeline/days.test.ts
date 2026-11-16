@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultCsvOptions, rowsToCsv } from "../csv";
+import { buildCsvTable, defaultCsvOptions, rowsToCsv } from "../csv";
 import { dutchHolidays } from "../holidays";
 import { dayKeyToWallStart, MINUTE_MS } from "../time";
 import {
@@ -333,5 +333,67 @@ describe("rowsToCsv", () => {
 		const lines = csv.trim().split("\r\n");
 		expect(lines[0]).toBe("Date,Day,Location,Minutes office,Minutes home,Note");
 		expect(lines[1]).toBe("2026-05-04,Monday,Home,0,0,manual");
+	});
+
+	it("exposes the same content as the CSV for the table preview", () => {
+		const rows = buildDayRows(
+			history([
+				visit("2026-05-04", 9, 17, OFFICE, "WORK"),
+				visit("2026-05-05", 9, 17, HOME, "HOME"),
+			]),
+			config,
+			options,
+		);
+		const preview = buildCsvTable(rows, {
+			...defaultCsvOptions,
+			dateStyle: "dmy",
+		});
+		const csv = rowsToCsv(rows, { ...defaultCsvOptions, dateStyle: "dmy" });
+
+		expect(preview.columns.map((column) => column.header)).toEqual([
+			"Datum",
+			"Dag",
+			"Locatie",
+			"Minuten kantoor",
+			"Minuten thuis",
+			"Opmerking",
+		]);
+		expect(preview.rows).toHaveLength(2);
+		expect(preview.rows[0]).toEqual([
+			"04-05-2026",
+			"maandag",
+			"Kantoor",
+			"480",
+			"0",
+			"",
+		]);
+
+		const csvLines = csv
+			.replace(/^\uFEFF/, "")
+			.trim()
+			.split("\r\n");
+		expect(csvLines).toHaveLength(preview.rows.length + 1);
+		expect(csvLines[0].split(";")).toEqual(
+			preview.columns.map((column) => column.header),
+		);
+		expect(csvLines[1].split(";")).toEqual(preview.rows[0]);
+	});
+
+	it("keeps table values stable when the delimiter changes", () => {
+		const rows = buildDayRows(
+			history([visit("2026-05-05", 9, 17, OFFICE, "WORK")]),
+			config,
+			{
+				...options,
+				holidays: new Map([["2026-05-05", "Feest;dag"]]),
+			},
+		);
+		const semicolon = buildCsvTable(rows, {
+			...defaultCsvOptions,
+			delimiter: ";",
+		});
+		const comma = buildCsvTable(rows, { ...defaultCsvOptions, delimiter: "," });
+		expect(comma.rows).toEqual(semicolon.rows);
+		expect(comma.rows[0][5]).toBe("Feest;dag");
 	});
 });

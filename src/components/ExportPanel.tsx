@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
+	buildCsvTable,
+	type CsvColumnKey,
 	type CsvOptions,
 	csvFileName,
 	exportRowsCount,
@@ -16,17 +18,12 @@ type Props = {
 };
 
 export function ExportPanel({ rows, range, options, onChange }: Props) {
-	const count = exportRowsCount(rows, options);
+	const [view, setView] = useState<"table" | "text">("table");
+	const table = useMemo(() => buildCsvTable(rows, options), [rows, options]);
 	const csv = useMemo(() => rowsToCsv(rows, options), [rows, options]);
-	const preview = useMemo(
-		() =>
-			csv
-				.replace(/^\uFEFF/, "")
-				.split("\r\n")
-				.slice(0, 6)
-				.join("\n"),
-		[csv],
-	);
+	const count = exportRowsCount(rows, options);
+	const includedCount = rows.filter((row) => row.included).length;
+	const hiddenByFilter = includedCount - count;
 	const reviewCount = rows.filter(
 		(row) => row.included && row.needsReview,
 	).length;
@@ -48,67 +45,71 @@ export function ExportPanel({ rows, range, options, onChange }: Props) {
 			<SectionHeader
 				step="5"
 				title="Export for AFAS"
-				description="The CSV opens in Excel. Dutch labels and semicolons by default, because that is what Excel expects here."
-				action={<Badge tone={count > 0 ? "ok" : "warn"}>{count} rows</Badge>}
+				description="Check the table below, then download. The file opens in Excel; Dutch labels and semicolons are already set."
+				action={
+					<Badge tone={count > 0 ? "ok" : "warn"}>
+						{count} row{count === 1 ? "" : "s"}
+					</Badge>
+				}
 			/>
 
-			<div className="grid gap-6 p-5 lg:grid-cols-2">
-				<div className="space-y-4">
-					<div className="grid gap-3 sm:grid-cols-2">
-						<Choice
-							label="Delimiter"
-							value={options.delimiter}
-							options={[
-								{ value: ";", label: "Semicolon ;" },
-								{ value: ",", label: "Comma ," },
-							]}
-							onChange={(value) =>
-								onChange({ delimiter: value as CsvOptions["delimiter"] })
-							}
-						/>
-						<Choice
-							label="Date format"
-							value={options.dateStyle}
-							options={[
-								{ value: "iso", label: "2026-05-01" },
-								{ value: "dmy", label: "01-05-2026" },
-							]}
-							onChange={(value) =>
-								onChange({ dateStyle: value as CsvOptions["dateStyle"] })
-							}
-						/>
-						<Choice
-							label="Labels"
-							value={options.labels}
-							options={[
-								{ value: "nl", label: "Kantoor / Thuis" },
-								{ value: "en", label: "Office / Home" },
-							]}
-							onChange={(value) =>
-								onChange({ labels: value as CsvOptions["labels"] })
-							}
-						/>
-						<div className="space-y-2 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-							<Toggle
-								checked={options.onlyClassified}
-								onChange={(onlyClassified) => onChange({ onlyClassified })}
-								label="Only office/home rows"
-								hint="Leave out days that still say Other or No data."
-							/>
-							<Toggle
-								checked={options.bom}
-								onChange={(bom) => onChange({ bom })}
-								label="UTF-8 BOM"
-								hint="Keeps accents intact in Excel."
-							/>
-						</div>
-					</div>
+			<div className="space-y-5 p-5">
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					<Choice
+						label="Delimiter"
+						value={options.delimiter}
+						options={[
+							{ value: ";", label: "Semicolon ;" },
+							{ value: ",", label: "Comma ," },
+						]}
+						onChange={(value) =>
+							onChange({ delimiter: value as CsvOptions["delimiter"] })
+						}
+					/>
+					<Choice
+						label="Date format"
+						value={options.dateStyle}
+						options={[
+							{ value: "iso", label: "2026-05-01" },
+							{ value: "dmy", label: "01-05-2026" },
+						]}
+						onChange={(value) =>
+							onChange({ dateStyle: value as CsvOptions["dateStyle"] })
+						}
+					/>
+					<Choice
+						label="Location labels"
+						value={options.labels}
+						options={[
+							{ value: "nl", label: "Kantoor / Thuis" },
+							{ value: "en", label: "Office / Home" },
+						]}
+						onChange={(value) =>
+							onChange({ labels: value as CsvOptions["labels"] })
+						}
+					/>
+				</div>
 
+				<div className="grid gap-4 md:grid-cols-2">
+					<div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+						<Toggle
+							checked={options.onlyClassified}
+							onChange={(onlyClassified) => onChange({ onlyClassified })}
+							label="Only office/home rows"
+							hint="Leave out days that still say Other or No data."
+						/>
+						<Toggle
+							checked={options.bom}
+							onChange={(bom) => onChange({ bom })}
+							label="UTF-8 BOM"
+							hint="Keeps accents intact in Excel."
+						/>
+					</div>
 					<div>
 						<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
 							Extra columns
 						</p>
-						<div className="mt-2 grid gap-2 sm:grid-cols-2">
+						<div className="mt-2 grid grid-cols-2 gap-2">
 							<Toggle
 								checked={options.includeDay}
 								onChange={(includeDay) => onChange({ includeDay })}
@@ -117,7 +118,7 @@ export function ExportPanel({ rows, range, options, onChange }: Props) {
 							<Toggle
 								checked={options.includeMinutes}
 								onChange={(includeMinutes) => onChange({ includeMinutes })}
-								label="Minutes office/home"
+								label="Minutes"
 							/>
 							<Toggle
 								checked={options.includeTimes}
@@ -127,48 +128,211 @@ export function ExportPanel({ rows, range, options, onChange }: Props) {
 							<Toggle
 								checked={options.includeSource}
 								onChange={(includeSource) => onChange({ includeSource })}
-								label="Evidence source"
+								label="Evidence"
 							/>
 							<Toggle
 								checked={options.includeNotes}
 								onChange={(includeNotes) => onChange({ includeNotes })}
-								label="Notes (holiday, manual)"
+								label="Notes"
 							/>
 						</div>
 					</div>
-
-					{reviewCount > 0 ? (
-						<p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/25">
-							{reviewCount} day{reviewCount === 1 ? "" : "s"} still need a
-							decision.
-							{options.onlyClassified
-								? " They are excluded from this export."
-								: " They will be exported as Other/Unknown."}
-						</p>
-					) : null}
 				</div>
 
-				<div className="flex flex-col">
-					<div className="flex items-center justify-between">
-						<p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-							Preview
-						</p>
-						<Badge tone="muted">{csvFileName(range.from, range.to)}</Badge>
+				{reviewCount > 0 ? (
+					<p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/25">
+						{reviewCount} day{reviewCount === 1 ? "" : "s"} still need a
+						decision.
+						{options.onlyClassified
+							? " They are left out of this file."
+							: " They are exported as Other/Unknown."}
+					</p>
+				) : null}
+
+				<div>
+					<div className="flex flex-wrap items-end justify-between gap-3">
+						<div>
+							<h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+								Preview
+							</h3>
+							<p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+								Exactly what HR gets — one row per working day.
+								{hiddenByFilter > 0 && options.onlyClassified
+									? ` ${hiddenByFilter} day${hiddenByFilter === 1 ? "" : "s"} left out by the filter above.`
+									: ""}
+							</p>
+						</div>
+						<div className="flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+							{(
+								[
+									["table", "Table"],
+									["text", "CSV text"],
+								] as const
+							).map(([value, label]) => (
+								<button
+									key={value}
+									type="button"
+									onClick={() => setView(value)}
+									aria-pressed={view === value}
+									className={cn(
+										"rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+										view === value
+											? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+											: "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+									)}
+								>
+									{label}
+								</button>
+							))}
+						</div>
 					</div>
-					<pre className="mt-2 min-h-40 flex-1 overflow-auto rounded-xl bg-slate-950 p-3 font-mono text-[11px] leading-5 text-slate-100 dark:bg-black/60">
-						{preview}
-					</pre>
+
+					<div className="mt-2">
+						{view === "table" ? (
+							<PreviewTable table={table} count={count} />
+						) : (
+							<pre className="max-h-[420px] overflow-auto rounded-xl bg-slate-950 p-3 font-mono text-[11px] leading-5 text-slate-100 dark:bg-black/60">
+								{csv.replace(/^\uFEFF/, "")}
+							</pre>
+						)}
+					</div>
+
 					<div className="mt-3 flex flex-wrap items-center gap-3">
 						<Button variant="primary" onClick={download} disabled={count === 0}>
+							<svg
+								aria-hidden="true"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.8"
+								className="size-4"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14"
+								/>
+							</svg>
 							Download CSV
 						</Button>
 						<span className="text-xs text-slate-500 dark:text-slate-400">
-							{count} data row{count === 1 ? "" : "s"}, nothing uploaded.
+							<code className="font-mono">
+								{csvFileName(range.from, range.to)}
+							</code>{" "}
+							· {count} data row{count === 1 ? "" : "s"}, nothing uploaded.
 						</span>
 					</div>
 				</div>
 			</div>
 		</Card>
+	);
+}
+
+const NUMERIC_COLUMNS: CsvColumnKey[] = [
+	"officeMinutes",
+	"homeMinutes",
+	"first",
+	"last",
+];
+
+function statusTone(value: string): "office" | "home" | "other" | "muted" {
+	const normalized = value.toLowerCase();
+	if (normalized === "kantoor" || normalized === "office") return "office";
+	if (normalized === "thuis" || normalized === "home") return "home";
+	if (normalized === "anders" || normalized === "other") return "other";
+	return "muted";
+}
+
+function PreviewTable({
+	table,
+	count,
+}: {
+	table: ReturnType<typeof buildCsvTable>;
+	count: number;
+}) {
+	if (count === 0) {
+		return (
+			<div className="rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center dark:border-slate-700">
+				<p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+					No rows to show yet
+				</p>
+				<p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
+					Pin your office in step 2, widen the period in step 3, or turn off
+					&ldquo;Only office/home rows&rdquo; to see everything.
+				</p>
+			</div>
+		);
+	}
+
+	return (
+		<div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+			<div className="max-h-[420px] overflow-auto">
+				<table className="w-full border-collapse text-sm">
+					<caption className="sr-only">
+						Preview of the CSV that will be downloaded
+					</caption>
+					<thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800">
+						<tr>
+							{table.columns.map((column) => (
+								<th
+									key={column.key}
+									scope="col"
+									className={cn(
+										"whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400",
+										NUMERIC_COLUMNS.includes(column.key) && "text-right",
+									)}
+								>
+									{column.header}
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{table.rows.map((cells, rowIndex) => (
+							<tr
+								// Rows are homogeneous output; the index is stable for this render.
+								// biome-ignore lint/suspicious/noArrayIndexKey: rendered from a static table snapshot
+								key={rowIndex}
+								className="odd:bg-white even:bg-slate-50/60 dark:odd:bg-slate-900 dark:even:bg-slate-800/30"
+							>
+								{cells.map((value, cellIndex) => {
+									const column = table.columns[cellIndex];
+									return (
+										<td
+											key={column.key}
+											className={cn(
+												"whitespace-nowrap border-b border-slate-100 px-3 py-1.5 text-slate-700 last:border-0 dark:border-slate-800 dark:text-slate-200",
+												NUMERIC_COLUMNS.includes(column.key) &&
+													"text-right tabular-nums",
+												column.key === "date" &&
+													"font-medium text-slate-900 dark:text-slate-100",
+												column.key === "day" && "capitalize text-slate-500",
+												column.key === "note" &&
+													"text-xs text-slate-500 dark:text-slate-400",
+												column.key === "source" &&
+													"text-xs text-slate-500 dark:text-slate-400",
+											)}
+										>
+											{column.key === "status" ? (
+												<Badge tone={statusTone(value)}>{value}</Badge>
+											) : (
+												value || "—"
+											)}
+										</td>
+									);
+								})}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+				<span>
+					{table.rows.length} row{table.rows.length === 1 ? "" : "s"}
+				</span>
+				<span>Scroll for more · headers stay visible</span>
+			</div>
+		</div>
 	);
 }
 
