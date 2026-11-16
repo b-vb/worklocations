@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { DayTable } from "../components/DayTable";
 import { DropZone } from "../components/DropZone";
 import { ExportPanel } from "../components/ExportPanel";
@@ -11,7 +11,7 @@ import {
 	rangeBounds,
 } from "../components/RangeControls";
 import { Summary } from "../components/Summary";
-import { Badge, Button, Card } from "../components/ui";
+import { Badge, Button, Card, SectionHeader } from "../components/ui";
 import { holidaysInRange } from "../lib/holidays";
 import {
 	type AppSettings,
@@ -52,7 +52,16 @@ function Home() {
 	const [error, setError] = useState<string | null>(null);
 	const [showDetails, setShowDetails] = useState(false);
 	const [showUpload, setShowUpload] = useState(false);
+	const [showPlaces, setShowPlaces] = useState(() => settings.office === null);
 	const placesRef = useRef<HTMLDivElement | null>(null);
+	const periodRef = useRef<HTMLDivElement | null>(null);
+	const resultRef = useRef<HTMLDivElement | null>(null);
+
+	const office = settings.office;
+
+	const scrollTo = (ref: RefObject<HTMLDivElement | null>) => {
+		ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+	};
 
 	useEffect(() => saveSettings(settings), [settings]);
 	useEffect(() => saveOverrides(overrides), [overrides]);
@@ -97,12 +106,9 @@ function Home() {
 				parsed.warnings.length === 0 &&
 				(parsed.visits.length > 0 || parsed.points.length > 0)
 			) {
-				window.setTimeout(() => {
-					placesRef.current?.scrollIntoView({
-						behavior: "smooth",
-						block: "start",
-					});
-				}, 150);
+				// Settings from a previous visit mean step 2 is already done.
+				const target = office ? periodRef : placesRef;
+				window.setTimeout(() => scrollTo(target), 150);
 			}
 		} catch (caught) {
 			setError(
@@ -375,25 +381,78 @@ function Home() {
 							/>
 						) : null}
 
-						<div ref={placesRef} className="scroll-mt-4">
-							<PlaceSetup
-								settings={settings}
-								clusters={clusters}
-								onChange={updateSettings}
-							/>
-						</div>
+						{showPlaces || !office ? (
+							<div ref={placesRef} className="scroll-mt-4">
+								<PlaceSetup
+									settings={settings}
+									clusters={clusters}
+									onChange={updateSettings}
+									onContinue={() => {
+										setShowPlaces(false);
+										scrollTo(periodRef);
+									}}
+								/>
+							</div>
+						) : (
+							<Card>
+								<SectionHeader
+									step="2"
+									title="Work and home"
+									description="Already set up from your last visit. Change it if your office moved."
+									action={
+										<Button
+											size="sm"
+											variant="secondary"
+											onClick={() => setShowPlaces(true)}
+										>
+											Change places
+										</Button>
+									}
+								/>
+								<div className="flex flex-wrap items-center gap-2 px-5 py-4">
+									<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+										<Badge tone="office" className="max-w-full">
+											<span className="truncate">
+												Office · {office.label || "pinned"} ·{" "}
+												{office.radiusMeters} m
+											</span>
+										</Badge>
+										<Badge tone="home" className="max-w-full">
+											<span className="truncate">
+												{settings.home
+													? `Home · ${settings.home.label ?? "pinned"} · ${settings.home.radiusMeters} m`
+													: "Home · auto (Google HOME)"}
+											</span>
+										</Badge>
+									</div>
+									<Button
+										size="sm"
+										variant="primary"
+										onClick={() => scrollTo(periodRef)}
+									>
+										Next: choose the period
+									</Button>
+								</div>
+							</Card>
+						)}
 
 						{bounds && range ? (
-							<RangeControls
-								settings={settings}
-								range={range}
-								bounds={bounds}
-								onRangeChange={setRange}
-								onSettingsChange={updateSettings}
-							/>
+							<div ref={periodRef} className="scroll-mt-4">
+								<RangeControls
+									settings={settings}
+									range={range}
+									bounds={bounds}
+									onRangeChange={setRange}
+									onSettingsChange={updateSettings}
+									onContinue={() => scrollTo(resultRef)}
+								/>
+							</div>
 						) : null}
 
-						<div className="flex items-center gap-2">
+						<div
+							ref={resultRef}
+							className="scroll-mt-4 flex items-center gap-2"
+						>
 							<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
 								Result
 							</h2>

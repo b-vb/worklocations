@@ -14,9 +14,15 @@ type Props = {
 	settings: AppSettings;
 	clusters: PlaceCluster[];
 	onChange: (patch: Partial<AppSettings>) => void;
+	onContinue?: () => void;
 };
 
-export function PlaceSetup({ settings, clusters, onChange }: Props) {
+export function PlaceSetup({
+	settings,
+	clusters,
+	onChange,
+	onContinue,
+}: Props) {
 	const [query, setQuery] = useState("");
 	const [results, setResults] = useState<AddressResult[]>([]);
 	const [searching, setSearching] = useState(false);
@@ -414,6 +420,18 @@ export function PlaceSetup({ settings, clusters, onChange }: Props) {
 					</ul>
 				</div>
 			</div>
+
+			{onContinue ? (
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+					<p className="text-xs text-slate-500 dark:text-slate-400">
+						These settings are saved in this browser, so you only have to do
+						this once.
+					</p>
+					<Button variant="primary" size="sm" onClick={onContinue}>
+						Next: choose the period
+					</Button>
+				</div>
+			) : null}
 		</Card>
 	);
 }

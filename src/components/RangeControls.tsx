@@ -19,6 +19,7 @@ type Props = {
 	bounds: { min: string; max: string };
 	onRangeChange: (range: Range) => void;
 	onSettingsChange: (patch: Partial<AppSettings>) => void;
+	onContinue?: () => void;
 };
 
 const PRESETS = [
@@ -38,6 +39,7 @@ export function RangeControls({
 	bounds,
 	onRangeChange,
 	onSettingsChange,
+	onContinue,
 }: Props) {
 	const applyPreset = (preset: (typeof PRESETS)[number]["id"]) => {
 		if (preset === "all") {
@@ -245,6 +247,17 @@ export function RangeControls({
 					</div>
 				</div>
 			</div>
+
+			{onContinue ? (
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+					<p className="text-xs text-slate-500 dark:text-slate-400">
+						Changing the period updates the day table below instantly.
+					</p>
+					<Button variant="primary" size="sm" onClick={onContinue}>
+						Next: check the days
+					</Button>
+				</div>
+			) : null}
 		</Card>
 	);
 }
