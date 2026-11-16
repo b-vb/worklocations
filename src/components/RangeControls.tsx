@@ -22,10 +22,11 @@ type Props = {
 };
 
 const PRESETS = [
-	{ id: "all", label: "All data" },
 	{ id: "2m", label: "Last 2 months" },
 	{ id: "6m", label: "Last 6 months" },
+	{ id: "12m", label: "Last 12 months" },
 	{ id: "year", label: "This year" },
+	{ id: "all", label: "All data" },
 ] as const;
 
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -49,6 +50,10 @@ export function RangeControls({
 		}
 		if (preset === "6m") {
 			onRangeChange({ from: addDaysKey(bounds.max, -183), to: bounds.max });
+			return;
+		}
+		if (preset === "12m") {
+			onRangeChange({ from: addDaysKey(bounds.max, -365), to: bounds.max });
 			return;
 		}
 		const yearStart = `${dayKey(dayKeyToWallStart(bounds.max)).slice(0, 4)}-01-01`;

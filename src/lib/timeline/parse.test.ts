@@ -112,6 +112,12 @@ describe("Android export", () => {
 			{ lat: 52.0907, lng: 5.1214, label: "HOME", placeId: "home-place" },
 		]);
 	});
+
+	it("does not warn when the export produced data", () => {
+		expect(history.visits.length).toBeGreaterThan(0);
+		expect(history.points.length).toBeGreaterThan(0);
+		expect(history.warnings).toEqual([]);
+	});
 });
 
 describe("iOS export", () => {
@@ -224,6 +230,17 @@ describe("robustness", () => {
 	it("reports unknown formats", () => {
 		const history = parse({ something: [] });
 		expect(history.warnings[0]).toContain("not a Google Timeline export");
+	});
+
+	it("only notes an empty file when other files did produce data", () => {
+		const text = JSON.stringify(android);
+		const history = parseTimelineJson([
+			{ name: "good.json", bytes: text.length, text },
+			{ name: "empty.json", bytes: 24, text: '{"semanticSegments":[]}' },
+		]);
+		expect(history.warnings).toHaveLength(1);
+		expect(history.warnings[0]).toContain("empty.json");
+		expect(history.warnings[0]).toContain("no visits or location points");
 	});
 
 	it("skips segments without coordinates but keeps going", () => {

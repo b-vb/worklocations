@@ -133,7 +133,7 @@ export function weekdayOfDayKey(key: string): number {
 	return dayKeyToDate(key).getUTCDay();
 }
 
-export function eachDayKey(from: string, to: string, limit = 800): string[] {
+export function eachDayKey(from: string, to: string, limit = 6000): string[] {
 	const keys: string[] = [];
 	let cursor = dayKeyToWallStart(from);
 	const end = dayKeyToWallStart(to);

@@ -239,6 +239,21 @@ describe("buildDayRows", () => {
 		expect(summary.home).toBe(1);
 		expect(summary.noData).toBe(3);
 	});
+
+	it("covers ranges longer than the old two-year cap", () => {
+		const rows = buildDayRows(
+			history([visit("2011-05-04", 9, 17, OFFICE, "WORK")]),
+			{ ...config, from: "2011-01-01", to: "2026-01-01" },
+			options,
+		);
+		expect(rows.length).toBeGreaterThan(5_000);
+		expect(rows.find((row) => row.date === "2011-05-04")?.status).toBe(
+			"office",
+		);
+		expect(rows.find((row) => row.date === "2025-06-02")?.status).toBe(
+			"no-data",
+		);
+	});
 });
 
 describe("clusterPlaces", () => {

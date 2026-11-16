@@ -158,12 +158,7 @@ function addPath(
 	}
 }
 
-function parseDevice(
-	root: unknown,
-	acc: Accumulator,
-	fileName: string,
-	report: FileReport,
-) {
+function parseDevice(root: unknown, acc: Accumulator, fileName: string) {
 	const rec = asRec(root);
 	const segments = Array.isArray(root) ? root : asArray(rec?.semanticSegments);
 
@@ -214,12 +209,6 @@ function parseDevice(
 			label: asString(place.label),
 			placeId: asString(place.placeId ?? place.placeID),
 		});
-	}
-
-	if (report.visits === 0 && report.points === 0) {
-		acc.warnings.push(
-			`${fileName}: the export was readable but contained no visits or points.`,
-		);
 	}
 }
 
@@ -373,12 +362,19 @@ export function parseTimelineJson(inputs: ParseInput[]): ParsedHistory {
 		const visitsBefore = acc.visits.length;
 		const pointsBefore = acc.points.length;
 
-		if (format === "device") parseDevice(root, acc, input.name, report);
+		if (format === "device") parseDevice(root, acc, input.name);
 		if (format === "legacy") parseLegacy(root, acc, input.name);
 		if (format === "records") parseRecords(root, acc, acc.warnings, input.name);
 
 		report.visits = acc.visits.length - visitsBefore;
 		report.points = acc.points.length - pointsBefore;
+		// Only worth a note when other files did produce data, otherwise the
+		// global "nothing found" warning below covers it.
+		if (inputs.length > 1 && report.visits === 0 && report.points === 0) {
+			acc.warnings.push(
+				`${input.name}: readable, but it contained no visits or location points.`,
+			);
+		}
 		files.push(report);
 	}
 

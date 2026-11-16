@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DayTable } from "../components/DayTable";
 import { DropZone } from "../components/DropZone";
 import { ExportPanel } from "../components/ExportPanel";
@@ -20,7 +20,7 @@ import {
 	saveOverrides,
 	saveSettings,
 } from "../lib/settings";
-import { formatDate } from "../lib/time";
+import { addDaysKey, formatDate } from "../lib/time";
 import {
 	buildDayRows,
 	clusterPlaces,
@@ -31,6 +31,14 @@ import { parseTimelineFiles } from "../lib/timeline/load";
 import type { ParsedHistory } from "../lib/timeline/types";
 
 export const Route = createFileRoute("/")({ component: Home });
+
+function plural(
+	count: number,
+	singular: string,
+	pluralForm = `${singular}s`,
+): string {
+	return `${count.toLocaleString()} ${count === 1 ? singular : pluralForm}`;
+}
 
 function Home() {
 	const [history, setHistory] = useState<ParsedHistory | null>(null);
@@ -43,6 +51,8 @@ function Home() {
 	const [progress, setProgress] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [showDetails, setShowDetails] = useState(false);
+	const [showUpload, setShowUpload] = useState(false);
+	const placesRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => saveSettings(settings), [settings]);
 	useEffect(() => saveOverrides(overrides), [overrides]);
@@ -63,7 +73,13 @@ function Home() {
 			parsed.range.startWall,
 			parsed.range.endWall,
 		);
-		setRange({ from: nextBounds.min, to: nextBounds.max });
+		// Default to the last year: real exports can span a decade, and nobody
+		// wants thousands of irrelevant days before picking a period.
+		const twelveMonthsAgo = addDaysKey(nextBounds.max, -365);
+		setRange({
+			from: twelveMonthsAgo < nextBounds.min ? nextBounds.min : twelveMonthsAgo,
+			to: nextBounds.max,
+		});
 	};
 
 	const handleFiles = async (files: File[]) => {
@@ -73,6 +89,21 @@ function Home() {
 		try {
 			const parsed = await parseTimelineFiles(files, setProgress);
 			applyHistory(parsed);
+			setShowUpload(false);
+			setShowDetails(parsed.warnings.length > 0);
+			// With a clean parse, move the eye to the next step. Warnings stay
+			// visible instead, so they cannot be missed.
+			if (
+				parsed.warnings.length === 0 &&
+				(parsed.visits.length > 0 || parsed.points.length > 0)
+			) {
+				window.setTimeout(() => {
+					placesRef.current?.scrollIntoView({
+						behavior: "smooth",
+						block: "start",
+					});
+				}, 150);
+			}
 		} catch (caught) {
 			setError(
 				caught instanceof Error ? caught.message : "Could not read the file.",
@@ -188,6 +219,8 @@ function Home() {
 								onClick={() => {
 									setHistory(null);
 									setRange(null);
+									setShowUpload(false);
+									setShowDetails(false);
 								}}
 							>
 								Close data
@@ -200,6 +233,37 @@ function Home() {
 			<main className="mx-auto max-w-6xl space-y-5 px-4 py-6">
 				{!history ? (
 					<>
+						<div>
+							<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+								How it works
+							</h2>
+							<p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+								Three steps. Your location history never leaves this tab.
+							</p>
+						</div>
+						<div className="grid gap-4 sm:grid-cols-3">
+							{[
+								{
+									title: "1. Open the export",
+									body: "Pick the Timeline.json from your phone. It is parsed locally in a worker, so even a 200 MB file will not freeze the page.",
+								},
+								{
+									title: "2. Pin work and home",
+									body: "Search an address or pick a place you already visit often. Everything inside the radius counts as time at that location.",
+								},
+								{
+									title: "3. Review and export",
+									body: "Pick the period, fix the odd day, then download a CSV with Datum + Kantoor/Thuis that HR can paste into AFAS.",
+								},
+							].map((item) => (
+								<Card key={item.title} className="p-4">
+									<p className="text-sm font-semibold">{item.title}</p>
+									<p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+										{item.body}
+									</p>
+								</Card>
+							))}
+						</div>
 						<DropZone
 							onFiles={handleFiles}
 							busy={busy}
@@ -213,73 +277,76 @@ function Home() {
 								disabled={busy}
 							/>
 						) : null}
-						<div className="grid gap-4 sm:grid-cols-3">
-							{[
-								{
-									title: "1. Open the export",
-									body: "Pick the Timeline.json from your phone. It is parsed locally in a worker, so even a 200 MB file will not freeze the page.",
-								},
-								{
-									title: "2. Pin work and home",
-									body: "Search an address or pick a place you already visit often. Everything inside the radius counts as time at that location.",
-								},
-								{
-									title: "3. Export CSV",
-									body: "Fix up the odd day in the table, then download a file with Datum + Kantoor/Thuis that HR can paste into AFAS.",
-								},
-							].map((item) => (
-								<Card key={item.title} className="p-4">
-									<p className="text-sm font-semibold">{item.title}</p>
-									<p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-										{item.body}
-									</p>
-								</Card>
-							))}
-						</div>
 					</>
 				) : (
 					<>
 						<Card className="p-4">
-							<div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+							<div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
 								<div className="flex items-center gap-2">
-									<span className="text-slate-500 dark:text-slate-400">
-										Loaded
+									<span className="font-medium text-slate-800 dark:text-slate-100">
+										Your export
 									</span>
-									<Badge tone="muted">{history.files.length} file(s)</Badge>
+									<Badge tone="muted">
+										{plural(history.files.length, "file")}
+									</Badge>
 								</div>
 								<div className="flex items-center gap-2">
-									<Badge tone="info">
-										{totalVisits.toLocaleString()} visits
-									</Badge>
-									<Badge tone="info">
-										{totalPoints.toLocaleString()} points
-									</Badge>
+									<Badge tone="info">{plural(totalVisits, "visit")}</Badge>
+									{totalPoints > 0 ? (
+										<Badge tone="info">{plural(totalPoints, "point")}</Badge>
+									) : null}
 								</div>
 								{history.range ? (
-									<span className="text-slate-600 dark:text-slate-300">
+									<span className="text-slate-500 dark:text-slate-400">
 										{formatDate(bounds?.min ?? "", "dmy")} –{" "}
-										{formatDate(bounds?.max ?? "", "dmy")}
+										{formatDate(bounds?.max ?? "", "dmy")} available
 									</span>
 								) : null}
-								{history.warnings.length > 0 ? (
-									<button
-										type="button"
+								<div className="ml-auto flex items-center gap-2">
+									{history.warnings.length > 0 ? (
+										<button
+											type="button"
+											onClick={() => setShowDetails((value) => !value)}
+											className="text-xs font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-400"
+										>
+											{plural(history.warnings.length, "warning")}
+										</button>
+									) : null}
+									<Button
+										size="sm"
+										variant="ghost"
 										onClick={() => setShowDetails((value) => !value)}
-										className="ml-auto text-xs font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-400"
+										aria-expanded={showDetails}
 									>
-										{history.warnings.length} warning(s)
-									</button>
-								) : null}
+										{showDetails ? "Hide details" : "Details"}
+									</Button>
+									<Button
+										size="sm"
+										variant={showUpload ? "primary" : "secondary"}
+										onClick={() => setShowUpload((value) => !value)}
+									>
+										{showUpload ? "Done" : "Replace file"}
+									</Button>
+								</div>
 							</div>
 							{showDetails ? (
 								<div className="mt-3 space-y-1 rounded-lg bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+									<p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+										Files
+									</p>
 									{history.files.map((file) => (
 										<p key={file.name} className="font-mono">
-											{file.name} · {file.format} · {file.visits} visits ·{" "}
-											{file.points} points
+											{file.name} · {file.format} ·{" "}
+											{plural(file.visits, "visit")} ·{" "}
+											{plural(file.points, "point")}
 											{file.error ? ` · ${file.error}` : ""}
 										</p>
 									))}
+									{history.warnings.length > 0 ? (
+										<p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+											Warnings
+										</p>
+									) : null}
 									{history.warnings.map((warning) => (
 										<p
 											key={warning}
@@ -292,13 +359,15 @@ function Home() {
 							) : null}
 						</Card>
 
-						<DropZone
-							onFiles={handleFiles}
-							busy={busy}
-							progress={progress}
-							error={error}
-							hasHistory
-						/>
+						{showUpload ? (
+							<DropZone
+								onFiles={handleFiles}
+								busy={busy}
+								progress={progress}
+								error={error}
+								hasHistory
+							/>
+						) : null}
 						{import.meta.env.DEV ? (
 							<LocalDataPanel
 								onFile={(file) => handleFiles([file])}
@@ -306,11 +375,13 @@ function Home() {
 							/>
 						) : null}
 
-						<PlaceSetup
-							settings={settings}
-							clusters={clusters}
-							onChange={updateSettings}
-						/>
+						<div ref={placesRef} className="scroll-mt-4">
+							<PlaceSetup
+								settings={settings}
+								clusters={clusters}
+								onChange={updateSettings}
+							/>
+						</div>
 
 						{bounds && range ? (
 							<RangeControls
