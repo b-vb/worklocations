@@ -1,6 +1,5 @@
 allowBuilds:
   esbuild: true
   lightningcss: true
-  workerd: true
 packages:
   - .
