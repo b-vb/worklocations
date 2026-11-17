@@ -11,6 +11,7 @@ No accounts, no server, no uploading your location history.
 ## Run it
 
 ```bash
+nvm use         # Node 26
 pnpm install
 pnpm dev        # http://localhost:3000
 ```
@@ -63,7 +64,7 @@ Yes. Cloudflare can build directly from this GitHub repo:
 3. Pick the repo and use:
    - Build command: `pnpm build`
    - Build output directory: `dist`
-   - Environment variable: `NODE_VERSION=24`
+   - Environment variable: `NODE_VERSION=26`
 4. Save and deploy. Every push to the connected branch rebuilds the site.
 
 `public/_redirects` handles the single-page fallback. The build is fully static;
