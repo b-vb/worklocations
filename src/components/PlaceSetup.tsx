@@ -87,7 +87,7 @@ export function PlaceSetup({
 		});
 	};
 
-	const useCurrentLocation = () => {
+	const locateCurrentPosition = () => {
 		placesSend({ type: "LOCATE", label: t("places.currentLocation") });
 	};
 
@@ -380,7 +380,11 @@ export function PlaceSetup({
 					) : null}
 
 					<div className="flex flex-wrap gap-2">
-						<Button size="sm" onClick={useCurrentLocation} disabled={locating}>
+						<Button
+							size="sm"
+							onClick={locateCurrentPosition}
+							disabled={locating}
+						>
 							{locating ? t("places.locating") : t("places.useCurrent")}
 						</Button>
 						{office ? (

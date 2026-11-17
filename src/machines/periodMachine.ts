@@ -25,10 +25,17 @@ function isValidDay(value: string): boolean {
 	return Number.isFinite(wall) && !Number.isNaN(new Date(wall).getTime());
 }
 
+function clampDate(value: string, min: string, max: string): string {
+	let result = value;
+	if (result < min) result = min;
+	if (result > max) result = max;
+	return result;
+}
+
 function defaultRange(bounds: PeriodBounds): { from: string; to: string } {
 	const twelveMonthsAgo = addDaysKey(bounds.max, -365);
 	return {
-		from: twelveMonthsAgo < bounds.min ? bounds.min : twelveMonthsAgo,
+		from: clampDate(twelveMonthsAgo, bounds.min, bounds.max),
 		to: bounds.max,
 	};
 }
@@ -56,8 +63,7 @@ function presetRange(
 			: addDaysKey(bounds.max, days);
 
 	return {
-		from:
-			from < bounds.min ? bounds.min : from > bounds.max ? bounds.max : from,
+		from: clampDate(from, bounds.min, bounds.max),
 		to: bounds.max,
 	};
 }
