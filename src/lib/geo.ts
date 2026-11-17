@@ -13,7 +13,7 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
 	return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-export function isValidLatLng(lat: number, lng: number): boolean {
+function isValidLatLng(lat: number, lng: number): boolean {
 	return (
 		Number.isFinite(lat) &&
 		Number.isFinite(lng) &&

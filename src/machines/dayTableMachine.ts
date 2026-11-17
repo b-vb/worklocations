@@ -1,6 +1,6 @@
 import { setup, types } from "xstate";
 
-export type DayFilter = "auto" | "review" | "workdays" | "all";
+type DayFilter = "auto" | "review" | "workdays" | "all";
 
 const dayTableSetup = setup({
 	schemas: {

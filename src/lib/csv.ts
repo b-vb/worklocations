@@ -2,7 +2,7 @@ import { holidayLabel } from "./holidays";
 import { formatDate, localDayKey } from "./time";
 import type { DayRow, DayStatus } from "./timeline/days";
 
-export type CsvLabels = "nl" | "en";
+type CsvLabels = "nl" | "en";
 
 export type CsvOptions = {
 	delimiter: "," | ";";
@@ -35,9 +35,16 @@ const STATUS_LABELS: Record<CsvLabels, Record<DayStatus, string>> = {
 		office: "Kantoor",
 		home: "Thuis",
 		other: "Anders",
+		pto: "Verlof",
 		"no-data": "Onbekend",
 	},
-	en: { office: "Office", home: "Home", other: "Other", "no-data": "Unknown" },
+	en: {
+		office: "Office",
+		home: "Home",
+		other: "Other",
+		pto: "PTO",
+		"no-data": "Unknown",
+	},
 };
 
 const WEEKDAYS: Record<CsvLabels, string[]> = {
@@ -134,7 +141,7 @@ export type CsvColumnKey =
 	| "source"
 	| "note";
 
-export type CsvColumn = { key: CsvColumnKey; header: string };
+type CsvColumn = { key: CsvColumnKey; header: string };
 
 export type CsvTable = {
 	columns: CsvColumn[];
@@ -218,12 +225,13 @@ function columnWriters(options: CsvOptions): ColumnWriter[] {
 	];
 }
 
-export function csvRows(rows: DayRow[], options: CsvOptions): DayRow[] {
+function csvRows(rows: DayRow[], options: CsvOptions): DayRow[] {
 	return rows.filter(
 		(row) =>
 			row.included &&
 			(!options.onlyClassified ||
-				(row.finalStatus !== "no-data" && row.finalStatus !== "other")),
+				row.finalStatus === "office" ||
+				row.finalStatus === "home"),
 	);
 }
 

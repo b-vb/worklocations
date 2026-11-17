@@ -6,19 +6,17 @@ import { holidayLabel } from "./holidays";
 
 export type Locale = "nl" | "en";
 
-export const LOCALE_STORAGE_KEY = "afas-commute-log.locale.v1";
+const LOCALE_STORAGE_KEY = "afas-commute-log.locale.v1";
 
 const nl = {
-	"app.title": "Werkplekken",
-	"app.subtitle":
-		"Google Tijdlijn → AFAS-werkplekken, zonder spreadsheet-archeologie",
+	"app.title": "Waar heb ik gewerkt?",
 	"app.noUploads": "geen uploads",
 	"app.closeData": "Sluit bestand",
 	"app.language": "Taal",
 
 	"intro.title": "Zo werkt het",
 	"intro.subtitle":
-		"Drie stappen. Je locatiegeschiedenis blijft in dit tabblad.",
+		"Drie stappen. Je locatiegeschiedenis blijft in je browser.",
 	"intro.step1.title": "1. Open je export",
 	"intro.step1.body":
 		"Kies het Timeline.json van je telefoon. Het bestand wordt lokaal in een worker gelezen, dus ook een bestand van 200 MB bevriest de pagina niet.",
@@ -41,8 +39,7 @@ const nl = {
 	"drop.readingFile": "Bezig met lezen: {{name}} ({{index}}/{{total}})…",
 	"drop.building": "Dagoverzicht maken…",
 	"drop.readFailed": "Kon het bestand niet lezen.",
-	"drop.formats":
-		"Android Timeline.json, iPhone location-history.json of een oude Takeout-export. Meerdere bestanden mogen.",
+	"drop.formats": "Android Timeline.json of iPhone location-history.json.",
 	"drop.where": "Waar vind ik het bestand?",
 	"drop.android": "Android (Google Maps-app)",
 	"drop.androidHelp":
@@ -50,10 +47,6 @@ const nl = {
 	"drop.ios": "iPhone (Google Maps-app)",
 	"drop.iosHelp":
 		"Profielfoto → Instellingen → Locatie en privacy → Tijdlijn exporteren. Het bestand heet location-history.json.",
-	"drop.takeout": "Oudere geschiedenis uit Takeout",
-	"drop.takeoutHelp":
-		"Google Takeout → Locatiegeschiedenis (JSON). Pak de zip uit en kies de maandbestanden uit Semantic Location History, of het grote Records.json.",
-
 	"loaded.title": "Jouw export",
 	"loaded.description":
 		"Al geladen in deze browser. Vervang het bestand als je een nieuwere export hebt.",
@@ -73,8 +66,6 @@ const nl = {
 	"loaded.filesHeading": "Bestanden",
 	"loaded.warningsHeading": "Waarschuwingen",
 	"format.device": "telefoon",
-	"format.legacy": "Takeout (oud)",
-	"format.records": "Records.json",
 
 	"places.title": "Werk en thuis",
 	"places.description":
@@ -193,6 +184,7 @@ const nl = {
 	"summary.home": "Thuis",
 	"summary.review": "Te controleren",
 	"summary.reviewHint": "andere plekken of geen data",
+	"summary.pto": "Verlof",
 	"summary.percent": "{{percent, number}}% van de dagen",
 	"summary.override_one": "{{count, number}} handmatige aanpassing",
 	"summary.override_other": "{{count, number}} handmatige aanpassingen",
@@ -227,10 +219,12 @@ const nl = {
 	"days.optionOffice": "Kantoor",
 	"days.optionHome": "Thuis",
 	"days.optionOther": "Anders",
+	"days.optionPto": "Verlof",
 	"days.optionSkip": "Overslaan",
 	"status.office": "Kantoor",
 	"status.home": "Thuis",
 	"status.other": "Anders",
+	"status.pto": "Verlof",
 	"status.no-data": "Geen data",
 
 	"export.title": "Exporteren voor AFAS",
@@ -278,14 +272,13 @@ const nl = {
 	"export.summaryDmy": "DD-MM-JJJJ",
 	"export.summaryOnly": "alleen geclassificeerde dagen",
 	"export.summaryAll": "alle dagen",
-	"export.scrollHint": "Scroll voor meer · koppen blijven staan",
 	"export.emptyCell": "—",
 
 	"footer.privacy":
-		"Locatiegeschiedenis blijft in dit tabblad. Instellingen en handmatige aanpassingen staan in localStorage op dit apparaat.",
+		"Je locatiegeschiedenis blijft in je browser. Instellingen en handmatige aanpassingen worden in deze browser bewaard.",
 	"footer.reset": "Wis opgeslagen instellingen",
 	"footer.resetConfirm":
-		"Je opgeslagen kantoor, thuis, werktijden, exportopties en handmatige aanpassingen wissen? Het geladen bestand blijft in dit tabblad.",
+		"Je opgeslagen kantoor, thuis, werktijden, exportopties en handmatige aanpassingen wissen? Het geladen bestand blijft geladen.",
 
 	"local.title": "Gevonden in ./data",
 	"local.loading": "Laden…",
@@ -296,15 +289,13 @@ const nl = {
 type Translation = typeof nl;
 
 const en: Translation = {
-	"app.title": "Commute Log",
-	"app.subtitle":
-		"Google Timeline → AFAS work locations, without the spreadsheet archaeology",
+	"app.title": "Where did I work?",
 	"app.noUploads": "no uploads",
 	"app.closeData": "Close data",
 	"app.language": "Language",
 
 	"intro.title": "How it works",
-	"intro.subtitle": "Three steps. Your location history never leaves this tab.",
+	"intro.subtitle": "Three steps. Your location history stays in your browser.",
 	"intro.step1.title": "1. Open the export",
 	"intro.step1.body":
 		"Pick the Timeline.json from your phone. It is parsed locally in a worker, so even a 200 MB file will not freeze the page.",
@@ -327,8 +318,7 @@ const en: Translation = {
 	"drop.readingFile": "Reading {{name}} ({{index}}/{{total}})…",
 	"drop.building": "Building your day-by-day timeline…",
 	"drop.readFailed": "Could not read the file.",
-	"drop.formats":
-		"Android Timeline.json, iPhone location-history.json, or an old Takeout export. Several files at once are fine.",
+	"drop.formats": "Android Timeline.json or iPhone location-history.json.",
 	"drop.where": "Where do I get the file?",
 	"drop.android": "Android (Google Maps app)",
 	"drop.androidHelp":
@@ -336,10 +326,6 @@ const en: Translation = {
 	"drop.ios": "iPhone (Google Maps app)",
 	"drop.iosHelp":
 		"Profile picture → Settings → Location & Privacy → Export Timeline data. The file is called location-history.json.",
-	"drop.takeout": "Older history from Takeout",
-	"drop.takeoutHelp":
-		"Google Takeout → Location History (JSON). Extract the zip and select the monthly Semantic Location History files, or the big Records.json.",
-
 	"loaded.title": "Your export",
 	"loaded.description":
 		"Already loaded in this browser. Replace it if you have a newer export.",
@@ -359,8 +345,6 @@ const en: Translation = {
 	"loaded.filesHeading": "Files",
 	"loaded.warningsHeading": "Warnings",
 	"format.device": "phone",
-	"format.legacy": "Takeout (legacy)",
-	"format.records": "Records.json",
 
 	"places.title": "Work and home",
 	"places.description":
@@ -479,6 +463,7 @@ const en: Translation = {
 	"summary.home": "Home",
 	"summary.review": "To review",
 	"summary.reviewHint": "other places or no data",
+	"summary.pto": "PTO",
 	"summary.percent": "{{percent, number}}% of days",
 	"summary.override_one": "{{count, number}} manual override",
 	"summary.override_other": "{{count, number}} manual overrides",
@@ -513,10 +498,12 @@ const en: Translation = {
 	"days.optionOffice": "Office",
 	"days.optionHome": "Home",
 	"days.optionOther": "Other",
+	"days.optionPto": "PTO",
 	"days.optionSkip": "Skip",
 	"status.office": "Office",
 	"status.home": "Home",
 	"status.other": "Other",
+	"status.pto": "PTO",
 	"status.no-data": "No data",
 
 	"export.title": "Export for AFAS",
@@ -565,14 +552,13 @@ const en: Translation = {
 	"export.summaryDmy": "DD-MM-YYYY",
 	"export.summaryOnly": "only classified days",
 	"export.summaryAll": "all days",
-	"export.scrollHint": "Scroll for more · headers stay visible",
 	"export.emptyCell": "—",
 
 	"footer.privacy":
-		"Location history stays in this tab. Settings and manual overrides are stored in localStorage on this device.",
+		"Your location history stays in your browser. Settings and manual changes are remembered in this browser.",
 	"footer.reset": "Reset saved settings",
 	"footer.resetConfirm":
-		"Clear your saved office, home, working hours, export options and manual day overrides? The loaded file stays in this tab.",
+		"Clear your saved office, home, working hours, export options and manual day overrides? The loaded file stays loaded.",
 
 	"local.title": "Found in ./data",
 	"local.loading": "Loading…",

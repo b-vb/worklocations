@@ -8,16 +8,10 @@ import {
 } from "../lib/settings";
 import type { Override } from "../lib/timeline/days";
 
-export type PreferencesContext = {
+type PreferencesContext = {
 	settings: AppSettings;
 	overrides: Record<string, Override>;
 };
-
-export type PreferencesEvent =
-	| { type: "SETTINGS_PATCH"; patch: Partial<AppSettings> }
-	| { type: "SET_OVERRIDE"; date: string; override: Override | undefined }
-	| { type: "CLEAR_OVERRIDES" }
-	| { type: "RESET_ALL" };
 
 const preferencesSetup = setup({
 	schemas: {

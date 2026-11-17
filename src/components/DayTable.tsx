@@ -23,10 +23,14 @@ type Props = {
 
 type Filter = "included" | "review" | "all";
 
-const STATUS_TONE: Record<DayStatus, "office" | "home" | "other" | "muted"> = {
+const STATUS_TONE: Record<
+	DayStatus,
+	"office" | "home" | "other" | "pto" | "muted"
+> = {
 	office: "office",
 	home: "home",
 	other: "other",
+	pto: "pto",
 	"no-data": "muted",
 };
 
@@ -34,6 +38,7 @@ const STATUS_KEY: Record<DayStatus, string> = {
 	office: "status.office",
 	home: "status.home",
 	other: "status.other",
+	pto: "status.pto",
 	"no-data": "status.no-data",
 };
 
@@ -270,6 +275,7 @@ function DayLine({
 						<option value="office">{t("days.optionOffice")}</option>
 						<option value="home">{t("days.optionHome")}</option>
 						<option value="other">{t("days.optionOther")}</option>
+						<option value="pto">{t("days.optionPto")}</option>
 						<option value="skip">{t("days.optionSkip")}</option>
 					</Select>
 				</div>

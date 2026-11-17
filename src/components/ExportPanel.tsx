@@ -269,11 +269,14 @@ const NUMERIC_COLUMNS: CsvColumnKey[] = [
 	"last",
 ];
 
-function statusTone(value: string): "office" | "home" | "other" | "muted" {
+function statusTone(
+	value: string,
+): "office" | "home" | "other" | "pto" | "muted" {
 	const normalized = value.toLowerCase();
 	if (normalized === "kantoor" || normalized === "office") return "office";
 	if (normalized === "thuis" || normalized === "home") return "home";
 	if (normalized === "anders" || normalized === "other") return "other";
+	if (normalized === "verlof" || normalized === "pto") return "pto";
 	return "muted";
 }
 
@@ -357,9 +360,8 @@ function PreviewTable({
 					</tbody>
 				</table>
 			</div>
-			<div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-				<span>{t("export.row", { count: table.rows.length })}</span>
-				<span>{t("export.scrollHint")}</span>
+			<div className="border-t border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+				{t("export.row", { count: table.rows.length })}
 			</div>
 		</div>
 	);

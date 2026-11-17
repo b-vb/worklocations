@@ -3,7 +3,7 @@ import type { ParseProgress } from "../lib/timeline/load";
 import type { ParsedHistory } from "../lib/timeline/types";
 import { parserLogic } from "./parser";
 
-export type ImportContext = {
+type ImportContext = {
 	history: ParsedHistory | null;
 	progress: ParseProgress | null;
 	error: string | null;
@@ -14,18 +14,6 @@ export type ImportContext = {
 	/** Kept only for the running parser actor; cleared on completion. */
 	pendingFiles: File[] | null;
 };
-
-export type ImportEvent =
-	| { type: "FILES"; files: File[] }
-	| { type: "CANCEL" }
-	| { type: "CLOSE" }
-	| { type: "OPEN_UPLOADER" }
-	| { type: "CLOSE_UPLOADER" }
-	| { type: "TOGGLE_DETAILS" }
-	| { type: "parser.progress"; progress: ParseProgress }
-	| { type: "parser.done"; history: ParsedHistory }
-	| { type: "parser.aborted" }
-	| { type: "parser.error"; error: string };
 
 const idleContext = {
 	history: null,

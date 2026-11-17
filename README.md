@@ -1,144 +1,91 @@
-# Commute Log
+# Waar heb ik gewerkt?
 
-Turn a **Google Maps Timeline** export into an **AFAS**-ready CSV of office and
-home days. Built because months of "where did you work today?" went unanswered.
+Your Google Maps Timeline knows where you were. AFAS wants to know whether you
+were at the office or at home. This app connects the two: drop in your timeline,
+check the days, download a CSV. Everything happens in your browser.
 
-Everything runs in the browser. Your location history is never uploaded, never
-leaves the tab, and is not stored anywhere except in memory.
+No accounts, no server, no uploading your location history.
 
-## Quick start
+## Run it
 
 ```bash
 pnpm install
 pnpm dev        # http://localhost:3000
 ```
 
-Then either:
+## Get your Timeline file
 
-- drag your `Timeline.json` / `location-history.json` onto the page, or
-- drop it in [`data/`](./data/README.md) and click it under **Found in ./data**
-  (dev server only).
+**iPhone** — Google Maps → profile picture → Settings → Location & Privacy →
+Export Timeline data. You get `location-history.json`.
 
-## Getting the export
+**Android** — same menu. You get `Timeline.json`.
 
-**Android** — Google Maps → profile picture → Settings → Location & Privacy →
-Export Timeline data. The file is `Timeline.json`.
+Drop the file on the page. It is parsed locally in a worker, so large exports
+will not freeze the tab. Old Google Takeout files are not supported.
 
-**iPhone** — same menu, file is `location-history.json`.
+## Using it
 
-**Older history** — Google Takeout → Location History (JSON). Extract the zip and
-select the monthly `Semantic Location History` files, or `Records.json`.
+1. **Open your export.** The upload card collapses once it is loaded.
+2. **Confirm work and home.** Use the suggested places, or open the map to pin
+   the exact spot and radius. These settings are remembered in this browser.
+3. **Pick the period.** Starts at the last 12 months; presets are clamped to the
+   data you actually have. Working days and the 07:00–19:00 window live behind
+   the gear if you need them.
+4. **Check the days.** Anything that needs a decision is highlighted. Mark a day
+   as **Verlof/PTO** when you were off. Changes are saved per day.
+5. **Download.** Filename: `werkplekken-2026-11-17.csv`.
 
-All four shapes (Android, iOS, legacy Takeout, Records) are detected from the
-content, so the file name does not matter.
+The default AFAS file contains `Datum;Locatie;Opmerking` and only office/home
+days. Turn off **Only office/home rows** in the export options to include
+Verlof/PTO and unknown days as well. Weekday, minutes, first/last seen and
+evidence are optional columns.
 
-## How days are classified
+Dutch and English are both available from the header; the app follows your
+browser language on first visit.
 
-1. Every visit is measured against two circles: the office and home, each with a
-   radius you control (default 150 m / 120 m). Pick them on the map, search an
-   address, drag a pin, or click a place you already visit often.
-2. Visits inside the office radius count as office time; inside the home radius
-   as home time; everything else as "other".
-3. Overlapping records are merged, so a nested visit (a lunch spot inside the
-   office) never double counts.
-4. Days with no visits fall back to raw breadcrumb positions, capped at 15
-   minutes per breadcrumb and marked as lower-confidence evidence.
-5. A day becomes **Office** when office time ≥ the threshold (default 2 hours),
-   otherwise **Home** if home time ≥ the threshold, otherwise **Other**. Days
-   without enough data are **No data** and flagged for review.
-6. Weekends, Dutch public holidays, and anything you set to *Skip* are left out
-   of the CSV. Any day can be overridden by hand.
+## What stays private
 
-Before you pin an office, places Google itself labels `WORK` / `HOME` are used as
-a fallback, so the app is useful immediately after parsing.
+Location history stays in your browser. Nothing is uploaded. Settings and day
+overrides are saved in this browser only.
 
-## Languages
+Two optional network calls exist: street lookup (OpenStreetMap Photon) and map
+tiles (OpenStreetMap). Neither receives your location history.
 
-The page is available in **Dutch and English**. It follows your browser language
-on first visit (anything that is not English or Dutch falls back to Dutch) and
-remembers your choice in localStorage. The language switch sits in the header.
+## Deploy on Cloudflare Pages via GitHub
 
-CSV labels are a separate setting and default to Dutch (`Kantoor`/`Thuis`),
-because AFAS is Dutch.
+Yes. Cloudflare can build directly from this GitHub repo:
 
-## Exporting for AFAS
+1. Push the repo to GitHub.
+2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** →
+   **Connect to Git**.
+3. Pick the repo and use:
+   - Build command: `pnpm build`
+   - Build output directory: `dist`
+   - Environment variable: `NODE_VERSION=24`
+4. Save and deploy. Every push to the connected branch rebuilds the site.
 
-Defaults: semicolon delimiter, UTF-8 BOM, Dutch labels, and
-`Datum;Locatie;Opmerking`. Weekday, minutes, first/last seen and evidence are
-optional columns in the export options. "Other" and "No data" rows are excluded
-by default so you only hand HR rows you actually confirmed.
+`public/_redirects` handles the single-page fallback. The build is fully static;
+no Cloudflare Functions or adapter are needed.
 
-AFAS only allows a limited backfill window, so the range picker has a
-**Last 2 months** preset; export in chunks if you need more.
-
-## Privacy
-
-- Files are read with the File API and parsed in a Web Worker. No upload, no
-  server, no analytics.
-- Two optional network calls, both only when you use them: address search sends
-  the text you typed to OpenStreetMap's [Photon](https://photon.komoot.io/)
-  service, and the map requests tiles from
-  [OpenStreetMap](https://www.openstreetmap.org/copyright) for the area you are
-  looking at. No location history is ever sent to either. Use coordinates or a
-  Google Maps link if you prefer zero lookups.
-- Office/home settings and manual day overrides are stored in `localStorage` on
-  this device. The timeline itself is not persisted.
+A separate GitHub Actions workflow runs lint, typecheck, tests, Knip and the
+production build on every push and pull request:
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Scripts
 
-```bash
-pnpm dev         # dev server
-pnpm build       # static build in dist/
-pnpm preview     # preview the build
-pnpm test        # parser, classifier and CSV tests
-pnpm typecheck   # tsc --noEmit
-pnpm check       # Biome lint + format
-```
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Development server |
+| `pnpm build` | Static production build in `dist/` |
+| `pnpm preview` | Preview the production build |
+| `pnpm test` | Unit, machine and browser-like smoke tests |
+| `pnpm typecheck` | TypeScript |
+| `pnpm check` | Biome lint and format |
+| `pnpm knip` | Unused files, exports and dependencies |
 
-## Deploying
+## Stack
 
-The output is a static SPA, so Cloudflare Pages works without an adapter:
-
-```bash
-pnpm build
-npx wrangler pages deploy dist
-```
-
-`public/_redirects` already contains the SPA fallback for direct navigation.
-
-## State machines
-
-Runtime state is modelled with **XState v6** (currently a pinned beta). The
-machines live in `src/machines/`:
-
-- `importMachine` — empty / importing / ready / error, including uploader and
-  details visibility. It invokes the parser actor and cancels it when the state
-  exits, so a closed or replaced import cannot overwrite newer data.
-- `parser.ts` — callback actor around the Web Worker, with abort support.
-- `preferencesMachine` — office/home settings and day overrides, plus reset.
-- `periodMachine` — valid range, clamped presets, advanced disclosure.
-- `placesMachine` — suggestions/editor, address search and current location.
-- `tileProviderMachine` — OSM primary/fallback/failed tile loading.
-- `dayTableMachine`, `exportPanelMachine`, `dropZoneMachine`,
-  `localDataMachine` — the smaller UI lifecycles.
-
-XState is deliberately used for behaviour over time. Pure calculations
-(`parse.ts`, `days.ts`, `time.ts`, `csv.ts`, holidays, geocoding distance) stay
-pure functions. Locale remains owned by i18next.
-
-## Structure
-
-```
-src/machines/               XState actors for import, places, period, UI
-src/lib/i18n.tsx            i18next setup, NL/EN resources, switcher hook
-src/lib/timeline/parse.ts   Google Timeline → normalized visits + points
-src/lib/timeline/days.ts    day classification, clustering, summaries
-src/lib/csv.ts              AFAS CSV writer
-src/lib/holidays.ts         Dutch public holidays
-src/lib/time.ts             wall-clock maths (timezone-safe day boundaries)
-src/components/             UI
-src/routes/index.tsx        the single page
-```
-
-Built with TanStack Router (SPA mode), React 19, Vite, Tailwind CSS v4, Biome,
-i18next and XState v6 (beta).
+TanStack Router (SPA), React 19, Vite, Tailwind CSS v4, XState v6 (beta),
+i18next and Biome. The runtime state machines live in
+[`src/machines/`](src/machines); pure calculations (timeline parsing, day
+classification, CSV writing) stay pure functions.

@@ -24,7 +24,7 @@ export type AppSettings = {
 const SETTINGS_KEY = "afas-commute-log.settings.v1";
 const OVERRIDES_KEY = "afas-commute-log.overrides.v1";
 
-export const defaultWorkdays = [false, true, true, true, true, true, false];
+const defaultWorkdays = [false, true, true, true, true, true, false];
 
 export const defaultSettings: AppSettings = {
 	office: null,
@@ -130,7 +130,7 @@ export function clearStoredSettings(): void {
 	}
 }
 
-const OVERRIDE_VALUES: Override[] = ["office", "home", "other", "skip"];
+const OVERRIDE_VALUES: Override[] = ["office", "home", "other", "pto", "skip"];
 
 export function loadOverrides(): Record<string, Override> {
 	if (typeof localStorage === "undefined") return {};

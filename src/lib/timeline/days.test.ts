@@ -224,6 +224,27 @@ describe("buildDayRows", () => {
 		expect(tuesday?.included).toBe(false);
 	});
 
+	it("supports PTO overrides", () => {
+		const rows = buildDayRows(history([]), config, {
+			...options,
+			overrides: { "2026-05-04": "pto" },
+		});
+		const monday = rows.find((row) => row.date === "2026-05-04");
+		expect(monday?.finalStatus).toBe("pto");
+		expect(monday?.included).toBe(true);
+		expect(monday?.needsReview).toBe(false);
+		expect(summarize(rows).pto).toBe(1);
+
+		const omitted = rowsToCsv(rows, defaultCsvOptions);
+		expect(omitted).not.toContain("Verlof");
+
+		const included = rowsToCsv(rows, {
+			...defaultCsvOptions,
+			onlyClassified: false,
+		});
+		expect(included).toContain("Verlof");
+	});
+
 	it("summarises included days", () => {
 		const rows = buildDayRows(
 			history([

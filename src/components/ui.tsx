@@ -30,6 +30,7 @@ export type Tone =
 	| "office"
 	| "home"
 	| "other"
+	| "pto"
 	| "muted"
 	| "warn"
 	| "ok"
@@ -41,6 +42,7 @@ const TONE_CLASSES: Record<Tone, string> = {
 	home: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/25",
 	other:
 		"bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/25",
+	pto: "bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:ring-violet-500/25",
 	muted:
 		"bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
 	warn: "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/25",
@@ -180,6 +182,7 @@ export function Stat({
 		office: "text-indigo-600 dark:text-indigo-400",
 		home: "text-emerald-600 dark:text-emerald-400",
 		other: "text-amber-600 dark:text-amber-400",
+		pto: "text-violet-600 dark:text-violet-400",
 		muted: "text-slate-900 dark:text-slate-100",
 		warn: "text-rose-600 dark:text-rose-400",
 		ok: "text-emerald-600 dark:text-emerald-400",

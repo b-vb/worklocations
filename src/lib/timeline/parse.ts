@@ -37,8 +37,6 @@ function asNumber(value: unknown): number | undefined {
 export function detectFormat(root: unknown): TimelineFormat | null {
 	const rec = asRec(root);
 
-	if (rec && Array.isArray(rec.timelineObjects)) return "legacy";
-	if (rec && Array.isArray(rec.locations)) return "records";
 	if (
 		rec &&
 		(Array.isArray(rec.semanticSegments) ||
@@ -212,76 +210,6 @@ function parseDevice(root: unknown, acc: Accumulator, fileName: string) {
 	}
 }
 
-function parseLegacy(root: unknown, acc: Accumulator, fileName: string) {
-	const rec = asRec(root);
-	for (const raw of asArray(rec?.timelineObjects)) {
-		const object = asRec(raw);
-		if (!object) continue;
-
-		const placeVisit = asRec(object.placeVisit);
-		if (placeVisit) {
-			const duration = asRec(placeVisit.duration);
-			const start = parseWallClock(
-				duration?.startTimestamp ?? duration?.startTimestampMs,
-				0,
-			);
-			const end = parseWallClock(
-				duration?.endTimestamp ?? duration?.endTimestampMs,
-				0,
-			);
-			if (!start) {
-				acc.warnings.push(
-					`${fileName}: a placeVisit had no start time and was skipped.`,
-				);
-				continue;
-			}
-			const durationMs = end ? Math.max(0, end.utc - start.utc) : 0;
-			const location =
-				parseLatLng(placeVisit.location) ?? parseLatLng(placeVisit);
-			if (!location || durationMs < MINUTE_MS) continue;
-			acc.visits.push({
-				startWall: start.wall,
-				endWall: start.wall + durationMs,
-				durationMs,
-				lat: location.lat,
-				lng: location.lng,
-				placeId: asString(placeVisit.placeId),
-				hierarchyLevel: 0,
-			});
-		}
-
-		// Activity segments are trips. They are intentionally not treated as
-		// presence, otherwise driving past the office would count as being there.
-	}
-}
-
-function parseRecords(
-	root: unknown,
-	acc: Accumulator,
-	warnings: string[],
-	fileName: string,
-) {
-	const rec = asRec(root);
-	let usable = 0;
-	for (const raw of asArray(rec?.locations)) {
-		const entry = asRec(raw);
-		if (!entry) continue;
-		const point = parseLatLng(entry);
-		const time = parseWallClock(entry.timestamp ?? entry.timestampMs, 0);
-		if (!point || !time) continue;
-		acc.points.push({
-			wall: time.wall,
-			lat: point.lat,
-			lng: point.lng,
-			accuracyMeters: asNumber(entry.accuracy),
-		});
-		usable += 1;
-	}
-	if (usable === 0) {
-		warnings.push(`${fileName}: no usable location records found.`);
-	}
-}
-
 function visitKey(visit: ParsedVisit): string {
 	return [
 		Math.round(visit.startWall / MINUTE_MS),
@@ -316,9 +244,9 @@ function dedupePoints(points: ParsedPoint[]): ParsedPoint[] {
 export type ParseInput = { name: string; bytes: number; text: string };
 
 /**
- * Parses one or more Google Timeline exports: Android `Timeline.json`,
- * iPhone `location-history.json`, legacy Takeout `Semantic Location History`
- * or `Records.json`. Pure function, so it runs both in a Web Worker and tests.
+ * Parses one or more Google Timeline exports: Android `Timeline.json` or
+ * iPhone `location-history.json`. Pure function, so it runs both in a Web
+ * Worker and tests.
  */
 export function parseTimelineJson(inputs: ParseInput[]): ParsedHistory {
 	const acc: Accumulator = {
@@ -353,7 +281,7 @@ export function parseTimelineJson(inputs: ParseInput[]): ParsedHistory {
 			report.error = "Unrecognised format";
 			files.push(report);
 			acc.warnings.push(
-				`${input.name}: not a Google Timeline export. Supported: Timeline.json (Android), location-history.json (iPhone), Takeout Semantic Location History, Records.json.`,
+				`${input.name}: not a Google Timeline export. Supported: Timeline.json (Android) and location-history.json (iPhone).`,
 			);
 			continue;
 		}
@@ -362,9 +290,7 @@ export function parseTimelineJson(inputs: ParseInput[]): ParsedHistory {
 		const visitsBefore = acc.visits.length;
 		const pointsBefore = acc.points.length;
 
-		if (format === "device") parseDevice(root, acc, input.name);
-		if (format === "legacy") parseLegacy(root, acc, input.name);
-		if (format === "records") parseRecords(root, acc, acc.warnings, input.name);
+		parseDevice(root, acc, input.name);
 
 		report.visits = acc.visits.length - visitsBefore;
 		report.points = acc.points.length - pointsBefore;

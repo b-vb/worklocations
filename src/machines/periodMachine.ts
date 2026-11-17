@@ -1,24 +1,16 @@
 import { setup, types } from "xstate";
 import { addDaysKey, dayKeyToWallStart } from "../lib/time";
 
-export type PeriodBounds = { min: string; max: string };
+type PeriodBounds = { min: string; max: string };
 
 export type PeriodPreset = "2m" | "6m" | "12m" | "year" | "all";
 
-export type PeriodContext = {
+type PeriodContext = {
 	bounds: PeriodBounds | null;
 	from: string;
 	to: string;
 	advanced: boolean;
 };
-
-export type PeriodEvent =
-	| { type: "HISTORY_READY"; bounds: PeriodBounds }
-	| { type: "HISTORY_CLEARED" }
-	| { type: "FROM_CHANGED"; value: string }
-	| { type: "TO_CHANGED"; value: string }
-	| { type: "PRESET"; preset: PeriodPreset }
-	| { type: "TOGGLE_ADVANCED" };
 
 const emptyContext: PeriodContext = {
 	bounds: null,

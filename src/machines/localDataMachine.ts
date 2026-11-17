@@ -2,14 +2,14 @@ import { createAsyncLogic, setup, types } from "xstate";
 
 export type LocalFile = { name: string; size: number };
 
-export type LocalDataContext = {
+type LocalDataContext = {
 	files: LocalFile[];
 	loadingName: string | null;
 	error: string | null;
 	onFile: (file: File) => void;
 };
 
-export type LocalDataInput = { onFile: (file: File) => void };
+type LocalDataInput = { onFile: (file: File) => void };
 
 const discoverLogic = createAsyncLogic<LocalFile[]>({
 	run: async ({ signal }) => {

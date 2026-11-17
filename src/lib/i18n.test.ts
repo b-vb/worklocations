@@ -9,10 +9,10 @@ afterAll(async () => {
 describe("i18n resources", () => {
 	it("ships Dutch and English", () => {
 		expect(i18n.getResourceBundle("nl", "translation")["app.title"]).toBe(
-			"Werkplekken",
+			"Waar heb ik gewerkt?",
 		);
 		expect(i18n.getResourceBundle("en", "translation")["app.title"]).toBe(
-			"Commute Log",
+			"Where did I work?",
 		);
 	});
 
@@ -48,6 +48,6 @@ describe("i18n resources", () => {
 
 	it("falls back to Dutch for unsupported languages", async () => {
 		await i18n.changeLanguage("de");
-		expect(i18n.t("app.title")).toBe("Werkplekken");
+		expect(i18n.t("app.title")).toBe("Waar heb ik gewerkt?");
 	});
 });

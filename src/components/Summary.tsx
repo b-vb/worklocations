@@ -27,6 +27,11 @@ export function Summary({ rows, summary }: Props) {
 			className: "bg-amber-400 dark:bg-amber-300",
 		},
 		{
+			label: t("status.pto"),
+			value: summary.pto,
+			className: "bg-violet-500 dark:bg-violet-400",
+		},
+		{
 			label: t("status.no-data"),
 			value: summary.noData,
 			className: "bg-slate-300 dark:bg-slate-700",
@@ -37,7 +42,7 @@ export function Summary({ rows, summary }: Props) {
 
 	return (
 		<Card className="p-5">
-			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
 				<Stat
 					label={t("summary.days")}
 					value={summary.days}
@@ -58,6 +63,12 @@ export function Summary({ rows, summary }: Props) {
 						percent: Math.round((summary.home / total) * 100),
 					})}
 					tone="home"
+				/>
+				<Stat
+					label={t("summary.pto")}
+					value={summary.pto}
+					hint={t("summary.daysHint")}
+					tone="pto"
 				/>
 				<Stat
 					label={t("summary.review")}

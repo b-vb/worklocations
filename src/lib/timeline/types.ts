@@ -1,4 +1,4 @@
-export type TimelineFormat = "device" | "legacy" | "records";
+export type TimelineFormat = "device";
 
 export type ParsedVisit = {
 	/** Wall-clock milliseconds (see lib/time.ts). */

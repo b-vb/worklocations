@@ -1,12 +1,8 @@
 import { setup, types } from "xstate";
 
-export type ExportView = "table" | "text";
+type ExportView = "table" | "text";
 
-export type ExportPanelContext = { optionsOpen: boolean };
-
-type ExportPanelEvent =
-	| { type: "SET_VIEW"; view: ExportView }
-	| { type: "TOGGLE_OPTIONS" };
+type ExportPanelContext = { optionsOpen: boolean };
 
 const exportSetup = setup({
 	schemas: {
@@ -33,5 +29,3 @@ export const exportPanelMachine = exportSetup.createMachine({
 		text: {},
 	},
 });
-
-export type { ExportPanelEvent };

@@ -32,7 +32,7 @@ function offsetFromSuffix(
 	return sign === "-" ? -magnitude : magnitude;
 }
 
-export function isFiniteNumber(value: unknown): value is number {
+function isFiniteNumber(value: unknown): value is number {
 	return typeof value === "number" && Number.isFinite(value);
 }
 
@@ -124,7 +124,7 @@ export function dayKeyToWallStart(key: string): number {
 	return Date.UTC(year, month - 1, day);
 }
 
-export function dayKeyToDate(key: string): Date {
+function dayKeyToDate(key: string): Date {
 	return new Date(dayKeyToWallStart(key));
 }
 

@@ -2,20 +2,19 @@
   "name": "afas-commute-log",
   "private": true,
   "type": "module",
-  "imports": {
-    "#/*": "./src/*"
-  },
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "knip": "knip",
     "typecheck": "tsc --noEmit",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check"
   },
+  "packageManager": "pnpm@12.21.0",
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "0.10.14",
@@ -44,6 +43,7 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "happy-dom": "^21.0.4",
+    "knip": "^6.45.1",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^5.1.0"

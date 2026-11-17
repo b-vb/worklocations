@@ -7,7 +7,7 @@ import {
 } from "../lib/geocode";
 import type { PlaceSetting } from "../lib/settings";
 
-export type PlacesContext = {
+type PlacesContext = {
 	office: PlaceSetting | null;
 	home: PlaceSetting | null;
 	pickTarget: "office" | "home";
@@ -20,22 +20,7 @@ export type PlacesContext = {
 	onHome: (place: PlaceSetting | null) => void;
 };
 
-export type PlacesEvent =
-	| { type: "OPEN_EDITOR" }
-	| { type: "CLOSE_EDITOR" }
-	| { type: "SET_PICK_TARGET"; target: "office" | "home" }
-	| { type: "SYNC"; office: PlaceSetting | null; home: PlaceSetting | null }
-	| { type: "QUERY_CHANGED"; query: string }
-	| { type: "SEARCH_TRIGGER" }
-	| { type: "SEARCH_RETRY" }
-	| { type: "LOCATE"; label: string }
-	| { type: "LOCATE_RETRY" }
-	| { type: "SET_OFFICE"; place: PlaceSetting }
-	| { type: "SET_HOME"; place: PlaceSetting }
-	| { type: "CLEAR_OFFICE" }
-	| { type: "CLEAR_HOME" };
-
-export type PlacesInput = {
+type PlacesInput = {
 	office: PlaceSetting | null;
 	home: PlaceSetting | null;
 	onOffice: (place: PlaceSetting | null) => void;

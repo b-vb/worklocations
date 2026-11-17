@@ -1,8 +1,6 @@
 import { setup, types } from "xstate";
 
-export type TileContext = { failures: number };
-
-type TileEvent = { type: "TILE_ERROR" } | { type: "TILE_LOAD" };
+type TileContext = { failures: number };
 
 const tileSetup = setup({
 	schemas: {
@@ -45,5 +43,3 @@ export const tileProviderMachine = tileSetup.createMachine({
 		},
 	},
 });
-
-export type { TileEvent };

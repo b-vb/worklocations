@@ -78,13 +78,11 @@ const android = {
 };
 
 describe("detectFormat", () => {
-	it("recognises Android, iOS, legacy and Records shapes", () => {
+	it("recognises Android and iOS shapes", () => {
 		expect(detectFormat(android)).toBe("device");
 		expect(
 			detectFormat([{ startTime: "2026-01-01T00:00:00Z", visit: {} }]),
 		).toBe("device");
-		expect(detectFormat({ timelineObjects: [] })).toBe("legacy");
-		expect(detectFormat({ locations: [] })).toBe("records");
 		expect(detectFormat({ hello: "world" })).toBeNull();
 	});
 });
@@ -159,54 +157,6 @@ describe("iOS export", () => {
 		expect(history.visits[0].placeId).toBe("work-ios");
 		expect(history.points).toHaveLength(2);
 		expect(formatClock(history.points[1].wall)).toBe("01:49");
-	});
-});
-
-describe("legacy Takeout", () => {
-	const legacy = {
-		timelineObjects: [
-			{
-				placeVisit: {
-					location: {
-						latitudeE7: 520907000,
-						longitudeE7: 51214000,
-						placeId: "legacy-home",
-					},
-					duration: {
-						startTimestamp: "2026-05-07T20:00:00.000Z",
-						endTimestamp: "2026-05-08T06:00:00.000Z",
-					},
-				},
-			},
-		],
-	};
-
-	it("parses placeVisit with E7 coordinates", () => {
-		const history = parse(legacy, "2026_MAY.json");
-		expect(history.files[0].format).toBe("legacy");
-		expect(history.visits).toHaveLength(1);
-		expect(history.visits[0].lat).toBeCloseTo(52.0907);
-		expect(history.visits[0].durationMs).toBe(10 * 3_600_000);
-	});
-});
-
-describe("Records.json", () => {
-	it("parses raw location points", () => {
-		const history = parse(
-			{
-				locations: [
-					{
-						latitudeE7: 520907000,
-						longitudeE7: 51214000,
-						accuracy: 20,
-						timestampMs: "1778000000000",
-					},
-				],
-			},
-			"Records.json",
-		);
-		expect(history.points).toHaveLength(1);
-		expect(history.files[0].format).toBe("records");
 	});
 });
 

@@ -10,23 +10,23 @@ import {
 } from "../time";
 import type { ParsedHistory } from "./types";
 
-export type PlaceConfig = LatLng & {
+type PlaceConfig = LatLng & {
 	radiusMeters: number;
 	label?: string;
 };
 
-export type Label = "office" | "home" | "other";
-export type DayStatus = "office" | "home" | "other" | "no-data";
-export type Override = "office" | "home" | "other" | "skip";
+type Label = "office" | "home" | "other";
+export type DayStatus = "office" | "home" | "other" | "no-data" | "pto";
+export type Override = "office" | "home" | "other" | "skip" | "pto";
 
-export type DaySlice = {
+type DaySlice = {
 	start: number;
 	end: number;
 	label: Label;
 	minutes: number;
 };
 
-export type DayRecord = {
+type DayRecord = {
 	date: string;
 	weekday: number;
 	officeMinutes: number;
@@ -227,7 +227,7 @@ function statusFor(
 }
 
 /** Builds one record per calendar day in the configured range. */
-export function buildDays(
+function buildDays(
 	history: ParsedHistory,
 	config: ClassifyConfig,
 ): DayRecord[] {
@@ -339,7 +339,10 @@ export function buildDayRows(
 		const holiday = options.holidays.get(record.date);
 		const override = options.overrides[record.date];
 		const finalStatus: DayStatus =
-			override === "office" || override === "home" || override === "other"
+			override === "office" ||
+			override === "home" ||
+			override === "other" ||
+			override === "pto"
 				? override
 				: override === "skip"
 					? "no-data"
@@ -470,6 +473,7 @@ export function summarize(rows: DayRow[]) {
 		office: included.filter((row) => row.finalStatus === "office").length,
 		home: included.filter((row) => row.finalStatus === "home").length,
 		other: included.filter((row) => row.finalStatus === "other").length,
+		pto: included.filter((row) => row.finalStatus === "pto").length,
 		noData: included.filter((row) => row.finalStatus === "no-data").length,
 		review: included.filter((row) => row.needsReview).length,
 	};

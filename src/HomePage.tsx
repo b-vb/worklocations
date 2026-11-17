@@ -26,14 +26,12 @@ import { importMachine } from "./machines/importMachine";
 import { periodMachine } from "./machines/periodMachine";
 import { preferencesMachine } from "./machines/preferencesMachine";
 
-export function scrollTo(ref: RefObject<HTMLDivElement | null>) {
+function scrollTo(ref: RefObject<HTMLDivElement | null>) {
 	ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 const FORMAT_LABEL: Record<string, string> = {
 	device: "format.device",
-	legacy: "format.legacy",
-	records: "format.records",
 };
 
 export function Home() {
@@ -200,14 +198,9 @@ export function Home() {
 								/>
 							</svg>
 						</div>
-						<div>
-							<h1 className="text-base font-semibold tracking-tight">
-								{t("app.title")}
-							</h1>
-							<p className="text-xs text-slate-500 dark:text-slate-400">
-								{t("app.subtitle")}
-							</p>
-						</div>
+						<h1 className="text-base font-semibold tracking-tight">
+							{t("app.title")}
+						</h1>
 					</div>
 					<div className="flex items-center gap-2">
 						<LocaleSwitcher />

@@ -136,14 +136,6 @@ export function DropZone({
 								{t("drop.iosHelp")}
 							</p>
 						</div>
-						<div>
-							<p className="font-medium text-slate-700 dark:text-slate-200">
-								{t("drop.takeout")}
-							</p>
-							<p className="text-xs text-slate-500 dark:text-slate-400">
-								{t("drop.takeoutHelp")}
-							</p>
-						</div>
 					</div>
 				</details>
 			</div>
