@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "format": "biome format",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "biome check",
+    "check-all": "pnpm check && pnpm typecheck && pnpm test && pnpm knip && pnpm build",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "packageManager": "pnpm@12.21.0",
   "engines": {

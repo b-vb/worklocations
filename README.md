@@ -70,9 +70,12 @@ Yes. Cloudflare can build directly from this GitHub repo:
 `public/_redirects` handles the single-page fallback. The build is fully static;
 no Cloudflare Functions or adapter are needed.
 
-A separate GitHub Actions workflow runs lint, typecheck, tests, Knip and the
-production build on every push and pull request:
+CI runs the same `pnpm check-all` gate on every push and pull request:
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+The repo also has a native Git pre-commit hook in `.githooks/pre-commit` that
+runs `pnpm check-all`. `pnpm install` points Git at it via `core.hooksPath`;
+no Husky or extra dependency.
 
 ## Scripts
 
