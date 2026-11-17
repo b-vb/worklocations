@@ -59,16 +59,15 @@ tiles (OpenStreetMap). Neither receives your location history.
 Yes. Cloudflare can build directly from this GitHub repo:
 
 1. Push the repo to GitHub.
-2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** →
+2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Workers** →
    **Connect to Git**.
-3. Pick the repo and use:
-   - Build command: `pnpm build`
-   - Build output directory: `dist`
-   - Environment variable: `NODE_VERSION=26`
-4. Save and deploy. Every push to the connected branch rebuilds the site.
+3. Cloudflare reads the committed `wrangler.jsonc` (Workers with static
+   assets): build command `pnpm build`, output directory `dist`, environment
+   variable `NODE_VERSION=26`.
+4. Save and deploy. Every push rebuilds and runs `wrangler deploy`.
 
-`public/_redirects` handles the single-page fallback. The build is fully static;
-no Cloudflare Functions or adapter are needed.
+`public/_redirects` handles the single-page fallback. You can also deploy
+locally with `pnpm deploy`.
 
 CI runs the same `pnpm check-all` gate on every push and pull request:
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
@@ -83,6 +82,7 @@ no Husky or extra dependency.
 | --- | --- |
 | `pnpm dev` | Development server |
 | `pnpm build` | Static production build in `dist/` |
+| `pnpm deploy` | `wrangler deploy` of the static assets |
 | `pnpm preview` | Preview the production build |
 | `pnpm test` | Unit, machine and browser-like smoke tests |
 | `pnpm typecheck` | TypeScript |
