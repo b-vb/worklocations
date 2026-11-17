@@ -21,8 +21,10 @@ export type AppSettings = {
 	csv: CsvOptions;
 };
 
-const SETTINGS_KEY = "afas-commute-log.settings.v1";
-const OVERRIDES_KEY = "afas-commute-log.overrides.v1";
+const SETTINGS_KEY = "worklocations.settings.v1";
+const OVERRIDES_KEY = "worklocations.overrides.v1";
+const LEGACY_SETTINGS_KEY = "afas-commute-log.settings.v1";
+const LEGACY_OVERRIDES_KEY = "afas-commute-log.overrides.v1";
 
 const defaultWorkdays = [false, true, true, true, true, true, false];
 
@@ -56,7 +58,9 @@ const SETTINGS_VERSION = 2;
 export function loadSettings(): AppSettings {
 	if (typeof localStorage === "undefined") return defaultSettings;
 	try {
-		const raw = localStorage.getItem(SETTINGS_KEY);
+		const raw =
+			localStorage.getItem(SETTINGS_KEY) ??
+			localStorage.getItem(LEGACY_SETTINGS_KEY);
 		if (!raw) return defaultSettings;
 		const parsed = JSON.parse(raw) as Partial<AppSettings> & {
 			version?: number;
@@ -108,12 +112,14 @@ export function saveSettings(settings: AppSettings): void {
 		// really means "nothing stored".
 		if (isDefaultSettings(settings)) {
 			localStorage.removeItem(SETTINGS_KEY);
+			localStorage.removeItem(LEGACY_SETTINGS_KEY);
 			return;
 		}
 		localStorage.setItem(
 			SETTINGS_KEY,
 			JSON.stringify({ ...settings, version: SETTINGS_VERSION }),
 		);
+		localStorage.removeItem(LEGACY_SETTINGS_KEY);
 	} catch {
 		// Storage can be full or blocked; the app still works without persistence.
 	}
@@ -125,6 +131,8 @@ export function clearStoredSettings(): void {
 	try {
 		localStorage.removeItem(SETTINGS_KEY);
 		localStorage.removeItem(OVERRIDES_KEY);
+		localStorage.removeItem(LEGACY_SETTINGS_KEY);
+		localStorage.removeItem(LEGACY_OVERRIDES_KEY);
 	} catch {
 		// Nothing useful to do if storage is unavailable.
 	}
@@ -135,7 +143,9 @@ const OVERRIDE_VALUES: Override[] = ["office", "home", "other", "pto", "skip"];
 export function loadOverrides(): Record<string, Override> {
 	if (typeof localStorage === "undefined") return {};
 	try {
-		const raw = localStorage.getItem(OVERRIDES_KEY);
+		const raw =
+			localStorage.getItem(OVERRIDES_KEY) ??
+			localStorage.getItem(LEGACY_OVERRIDES_KEY);
 		if (!raw) return {};
 		const parsed = JSON.parse(raw) as Record<string, unknown>;
 		const result: Record<string, Override> = {};
@@ -154,9 +164,11 @@ export function saveOverrides(overrides: Record<string, Override>): void {
 	try {
 		if (Object.keys(overrides).length === 0) {
 			localStorage.removeItem(OVERRIDES_KEY);
+			localStorage.removeItem(LEGACY_OVERRIDES_KEY);
 			return;
 		}
 		localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+		localStorage.removeItem(LEGACY_OVERRIDES_KEY);
 	} catch {
 		// Ignore quota errors.
 	}

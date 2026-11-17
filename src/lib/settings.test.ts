@@ -79,9 +79,19 @@ describe("settings storage", () => {
 		expect(loadOverrides()).toEqual({});
 	});
 
-	it("migrates old stored CSV options to the quieter defaults", () => {
+	it("reads settings saved under the old project name", () => {
 		store.set(
 			"afas-commute-log.settings.v1",
+			JSON.stringify({
+				office: { lat: 52.1, lng: 5.1, radiusMeters: 150 },
+			}),
+		);
+		expect(loadSettings().office?.lat).toBe(52.1);
+	});
+
+	it("migrates old stored CSV options to the quieter defaults", () => {
+		store.set(
+			"worklocations.settings.v1",
 			JSON.stringify({
 				office: { lat: 52.3567, lng: 4.8736, radiusMeters: 150 },
 				csv: {
@@ -99,7 +109,7 @@ describe("settings storage", () => {
 
 	it("keeps CSV customisations saved by the current version", () => {
 		store.set(
-			"afas-commute-log.settings.v1",
+			"worklocations.settings.v1",
 			JSON.stringify({
 				version: 2,
 				csv: { ...defaultCsvOptions, includeMinutes: true },

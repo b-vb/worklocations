@@ -6,7 +6,22 @@ import { holidayLabel } from "./holidays";
 
 export type Locale = "nl" | "en";
 
-const LOCALE_STORAGE_KEY = "afas-commute-log.locale.v1";
+const LOCALE_STORAGE_KEY = "worklocations.locale.v1";
+const LEGACY_LOCALE_STORAGE_KEY = "afas-commute-log.locale.v1";
+
+try {
+	if (
+		typeof localStorage !== "undefined" &&
+		!localStorage.getItem(LOCALE_STORAGE_KEY)
+	) {
+		const legacy = localStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
+		if (legacy === "nl" || legacy === "en") {
+			localStorage.setItem(LOCALE_STORAGE_KEY, legacy);
+		}
+	}
+} catch {
+	// Storage may be unavailable; detection still works without it.
+}
 
 const nl = {
 	"app.title": "Waar heb ik gewerkt?",

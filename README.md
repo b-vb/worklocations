@@ -1,4 +1,6 @@
-# Waar heb ik gewerkt?
+# Worklocations
+
+**Waar heb ik gewerkt?**
 
 Your Google Maps Timeline knows where you were. AFAS wants to know whether you
 were at the office or at home. This app connects the two: drop in your timeline,

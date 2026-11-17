@@ -1,5 +1,5 @@
 {
-  "projectName": "afas-commute-log",
+  "projectName": "worklocations",
   "mode": "file-router",
   "bundler": "vite",
   "typescript": true,
