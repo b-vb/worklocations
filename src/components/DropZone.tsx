@@ -1,5 +1,7 @@
-import { useRef, useState } from "react";
+import { useActor } from "@xstate/react";
+import { useRef } from "react";
 import { useI18n } from "../lib/i18n";
+import { dropZoneMachine } from "../machines/dropZoneMachine";
 import { Badge, Card, cn, SectionHeader } from "./ui";
 
 type Props = {
@@ -18,8 +20,9 @@ export function DropZone({
 	hasHistory,
 }: Props) {
 	const { t } = useI18n();
+	const [dropSnapshot, dropSend] = useActor(dropZoneMachine);
 	const inputRef = useRef<HTMLInputElement>(null);
-	const [dragging, setDragging] = useState(false);
+	const dragging = dropSnapshot.matches("dragging");
 
 	const handleFiles = (list: FileList | null) => {
 		if (!list || list.length === 0) return;
@@ -48,12 +51,12 @@ export function DropZone({
 					disabled={busy}
 					onDragOver={(event) => {
 						event.preventDefault();
-						setDragging(true);
+						dropSend({ type: "DRAG_ENTER" });
 					}}
-					onDragLeave={() => setDragging(false)}
+					onDragLeave={() => dropSend({ type: "DRAG_LEAVE" })}
 					onDrop={(event) => {
 						event.preventDefault();
-						setDragging(false);
+						dropSend({ type: "DROP" });
 						handleFiles(event.dataTransfer.files);
 					}}
 					onClick={() => inputRef.current?.click()}

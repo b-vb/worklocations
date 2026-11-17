@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useActor } from "@xstate/react";
+import { useMemo } from "react";
 import {
 	buildCsvTable,
 	type CsvColumnKey,
@@ -9,6 +10,7 @@ import {
 } from "../lib/csv";
 import { useI18n } from "../lib/i18n";
 import type { DayRow } from "../lib/timeline/days";
+import { exportPanelMachine } from "../machines/exportPanelMachine";
 import { Badge, Button, Card, cn, GearIcon, SectionHeader, Toggle } from "./ui";
 
 type Props = {
@@ -19,8 +21,9 @@ type Props = {
 
 export function ExportPanel({ rows, options, onChange }: Props) {
 	const { t } = useI18n();
-	const [view, setView] = useState<"table" | "text">("table");
-	const [showOptions, setShowOptions] = useState(false);
+	const [panelSnapshot, panelSend] = useActor(exportPanelMachine);
+	const view = panelSnapshot.matches("text") ? "text" : "table";
+	const showOptions = panelSnapshot.context.optionsOpen;
 	const table = useMemo(() => buildCsvTable(rows, options), [rows, options]);
 	const csv = useMemo(() => rowsToCsv(rows, options), [rows, options]);
 	const count = exportRowsCount(rows, options);
@@ -68,7 +71,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 						<Button
 							size="sm"
 							variant={showOptions ? "primary" : "ghost"}
-							onClick={() => setShowOptions((value) => !value)}
+							onClick={() => panelSend({ type: "TOGGLE_OPTIONS" })}
 							aria-expanded={showOptions}
 						>
 							<GearIcon />
@@ -205,7 +208,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 								<button
 									key={value}
 									type="button"
-									onClick={() => setView(value)}
+									onClick={() => panelSend({ type: "SET_VIEW", view: value })}
 									aria-pressed={view === value}
 									className={cn(
 										"rounded-md px-2.5 py-1 text-xs font-medium transition-colors",

@@ -106,9 +106,30 @@ npx wrangler pages deploy dist
 
 `public/_redirects` already contains the SPA fallback for direct navigation.
 
+## State machines
+
+Runtime state is modelled with **XState v6** (currently a pinned beta). The
+machines live in `src/machines/`:
+
+- `importMachine` — empty / importing / ready / error, including uploader and
+  details visibility. It invokes the parser actor and cancels it when the state
+  exits, so a closed or replaced import cannot overwrite newer data.
+- `parser.ts` — callback actor around the Web Worker, with abort support.
+- `preferencesMachine` — office/home settings and day overrides, plus reset.
+- `periodMachine` — valid range, clamped presets, advanced disclosure.
+- `placesMachine` — suggestions/editor, address search and current location.
+- `tileProviderMachine` — OSM primary/fallback/failed tile loading.
+- `dayTableMachine`, `exportPanelMachine`, `dropZoneMachine`,
+  `localDataMachine` — the smaller UI lifecycles.
+
+XState is deliberately used for behaviour over time. Pure calculations
+(`parse.ts`, `days.ts`, `time.ts`, `csv.ts`, holidays, geocoding distance) stay
+pure functions. Locale remains owned by i18next.
+
 ## Structure
 
 ```
+src/machines/               XState actors for import, places, period, UI
 src/lib/i18n.tsx            i18next setup, NL/EN resources, switcher hook
 src/lib/timeline/parse.ts   Google Timeline → normalized visits + points
 src/lib/timeline/days.ts    day classification, clustering, summaries
@@ -119,5 +140,5 @@ src/components/             UI
 src/routes/index.tsx        the single page
 ```
 
-Built with TanStack Router (SPA mode), React 19, Vite, Tailwind CSS v4, Biome and
-i18next.
+Built with TanStack Router (SPA mode), React 19, Vite, Tailwind CSS v4, Biome,
+i18next and XState v6 (beta).

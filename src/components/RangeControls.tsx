@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { useI18n } from "../lib/i18n";
 import type { AppSettings } from "../lib/settings";
-import { addDaysKey, DAY_MS, dayKey, dayKeyToWallStart } from "../lib/time";
+import { DAY_MS, dayKey } from "../lib/time";
+import type { PeriodPreset } from "../machines/periodMachine";
 import {
 	Button,
 	Card,
@@ -20,7 +20,11 @@ type Props = {
 	settings: AppSettings;
 	range: Range;
 	bounds: { min: string; max: string };
-	onRangeChange: (range: Range) => void;
+	advanced: boolean;
+	onFromChange: (value: string) => void;
+	onToChange: (value: string) => void;
+	onPreset: (preset: PeriodPreset) => void;
+	onToggleAdvanced: () => void;
 	onSettingsChange: (patch: Partial<AppSettings>) => void;
 	onContinue?: () => void;
 };
@@ -40,12 +44,15 @@ export function RangeControls({
 	settings,
 	range,
 	bounds,
-	onRangeChange,
+	advanced,
+	onFromChange,
+	onToChange,
+	onPreset,
+	onToggleAdvanced,
 	onSettingsChange,
 	onContinue,
 }: Props) {
 	const { t, formatWeekday } = useI18n();
-	const [showAdvanced, setShowAdvanced] = useState(false);
 	const summaryWorkdays = () => {
 		const active = settings.workdays
 			.map((on, index) => (on ? formatWeekday(index) : null))
@@ -66,27 +73,6 @@ export function RangeControls({
 		return active.join(", ");
 	};
 
-	const applyPreset = (preset: (typeof PRESETS)[number]["id"]) => {
-		if (preset === "all") {
-			onRangeChange({ from: bounds.min, to: bounds.max });
-			return;
-		}
-		if (preset === "2m") {
-			onRangeChange({ from: addDaysKey(bounds.max, -62), to: bounds.max });
-			return;
-		}
-		if (preset === "6m") {
-			onRangeChange({ from: addDaysKey(bounds.max, -183), to: bounds.max });
-			return;
-		}
-		if (preset === "12m") {
-			onRangeChange({ from: addDaysKey(bounds.max, -365), to: bounds.max });
-			return;
-		}
-		const yearStart = `${dayKey(dayKeyToWallStart(bounds.max)).slice(0, 4)}-01-01`;
-		onRangeChange({ from: yearStart, to: bounds.max });
-	};
-
 	const setWorkday = (index: number, value: boolean) => {
 		const workdays = [...settings.workdays];
 		workdays[index] = value;
@@ -102,9 +88,9 @@ export function RangeControls({
 				action={
 					<Button
 						size="sm"
-						variant={showAdvanced ? "primary" : "ghost"}
-						onClick={() => setShowAdvanced((value) => !value)}
-						aria-expanded={showAdvanced}
+						variant={advanced ? "primary" : "ghost"}
+						onClick={onToggleAdvanced}
+						aria-expanded={advanced}
 					>
 						<GearIcon />
 						{t("period.options")}
@@ -121,9 +107,7 @@ export function RangeControls({
 							value={range.from}
 							min={bounds.min}
 							max={range.to}
-							onChange={(event) =>
-								onRangeChange({ ...range, from: event.target.value })
-							}
+							onChange={(event) => onFromChange(event.target.value)}
 						/>
 					</Field>
 					<Field label={t("period.to")} className="w-full sm:w-40">
@@ -133,9 +117,7 @@ export function RangeControls({
 							value={range.to}
 							min={range.from}
 							max={bounds.max}
-							onChange={(event) =>
-								onRangeChange({ ...range, to: event.target.value })
-							}
+							onChange={(event) => onToChange(event.target.value)}
 						/>
 					</Field>
 					<div className="flex flex-wrap gap-1.5 pb-0.5">
@@ -143,7 +125,7 @@ export function RangeControls({
 							<Button
 								key={preset.id}
 								size="sm"
-								onClick={() => applyPreset(preset.id)}
+								onClick={() => onPreset(preset.id)}
 							>
 								{t(preset.labelKey)}
 							</Button>
@@ -151,7 +133,7 @@ export function RangeControls({
 					</div>
 				</div>
 
-				{showAdvanced ? (
+				{advanced ? (
 					<div className="grid gap-6 border-t border-slate-100 pt-5 md:grid-cols-2 dark:border-slate-800">
 						<div>
 							<p className="text-xs font-medium text-slate-600 dark:text-slate-300">

@@ -1,6 +1,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useActor } from "@xstate/react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	Circle,
 	MapContainer,
@@ -12,6 +13,7 @@ import {
 import type { LatLng } from "../lib/geo";
 import { useI18n } from "../lib/i18n";
 import type { PlaceSetting } from "../lib/settings";
+import { tileProviderMachine } from "../machines/tileProviderMachine";
 import { Button, cn } from "./ui";
 
 const OFFICE_COLOR = "#4f46e5";
@@ -102,29 +104,13 @@ export function PlaceMap({
 }: Props) {
 	const { t } = useI18n();
 	const [map, setMap] = useState<L.Map | null>(null);
-	const [providerIndex, setProviderIndex] = useState(0);
-	const [tilesFailed, setTilesFailed] = useState(false);
-	const providerRef = useRef(0);
-	const failuresRef = useRef(0);
-
+	const [tileSnapshot, tilesSend] = useActor(tileProviderMachine);
+	const providerIndex = tileSnapshot.matches("primary") ? 0 : 1;
+	const tilesFailed = tileSnapshot.matches("failed");
 	const providerUrl = TILE_PROVIDERS[providerIndex];
 
-	const handleTileError = () => {
-		failuresRef.current += 1;
-		if (failuresRef.current < 3) return;
-		failuresRef.current = 0;
-		if (providerRef.current < TILE_PROVIDERS.length - 1) {
-			providerRef.current += 1;
-			setProviderIndex(providerRef.current);
-			return;
-		}
-		setTilesFailed(true);
-	};
-
-	const handleTileLoad = () => {
-		failuresRef.current = 0;
-		setTilesFailed(false);
-	};
+	const handleTileError = () => tilesSend({ type: "TILE_ERROR" });
+	const handleTileLoad = () => tilesSend({ type: "TILE_LOAD" });
 
 	const officeIcon = useMemo(() => dotIcon(OFFICE_COLOR, "O"), []);
 	const homeIcon = useMemo(() => dotIcon(HOME_COLOR, "H"), []);

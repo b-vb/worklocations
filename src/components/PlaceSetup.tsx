@@ -1,13 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useActor } from "@xstate/react";
+import { useEffect, useMemo, useRef } from "react";
 import { formatLatLng, type LatLng, parseCoordinateInput } from "../lib/geo";
-import {
-	type AddressResult,
-	currentPosition,
-	searchAddress,
-} from "../lib/geocode";
 import { useI18n } from "../lib/i18n";
 import type { AppSettings } from "../lib/settings";
 import { type PlaceCluster, suggestPlace } from "../lib/timeline/days";
+import { placesMachine } from "../machines/placesMachine";
 import { PlaceMap } from "./PlaceMap";
 import { Badge, Button, Card, Field, SectionHeader, TextInput } from "./ui";
 
@@ -25,75 +22,63 @@ export function PlaceSetup({
 	onContinue,
 }: Props) {
 	const { t } = useI18n();
-	const [query, setQuery] = useState("");
-	const [results, setResults] = useState<AddressResult[]>([]);
-	const [searching, setSearching] = useState(false);
-	const [searchError, setSearchError] = useState<string | null>(null);
-	const [locating, setLocating] = useState(false);
-	const [locationError, setLocationError] = useState<string | null>(null);
-	const [pickTarget, setPickTarget] = useState<"office" | "home">("office");
-	const [editing, setEditing] = useState(false);
+	const onChangeRef = useRef(onChange);
+	onChangeRef.current = onChange;
+	const [placesSnapshot, placesSend] = useActor(placesMachine, {
+		input: {
+			office: settings.office,
+			home: settings.home,
+			onOffice: (place) => onChangeRef.current({ office: place }),
+			onHome: (place) => onChangeRef.current({ home: place }),
+		},
+	});
 
-	const office = settings.office;
-	const home = settings.home;
+	useEffect(() => {
+		placesSend({
+			type: "SYNC",
+			office: settings.office,
+			home: settings.home,
+		});
+	}, [placesSend, settings.office, settings.home]);
+
+	const office = placesSnapshot.context.office;
+	const home = placesSnapshot.context.home;
+	const editing = placesSnapshot.matches("editing");
+	const query = placesSnapshot.context.query;
+	const results = placesSnapshot.context.results;
+	const pickTarget = placesSnapshot.context.pickTarget;
+	const searching = placesSnapshot.matches({
+		editing: { search: "searching" },
+	});
+	const locating = placesSnapshot.matches({
+		editing: { locate: "locating" },
+	});
+	const emptySearch = placesSnapshot.matches({
+		editing: { search: "empty" },
+	});
+	const searchError = emptySearch
+		? t("places.noAddress")
+		: placesSnapshot.context.searchError;
+	const locationError = placesSnapshot.context.locateError;
 
 	const direct = useMemo(() => parseCoordinateInput(query), [query]);
 
-	useEffect(() => {
-		const trimmed = query.trim();
-		setSearchError(null);
-		if (trimmed.length < 3 || parseCoordinateInput(trimmed)) {
-			setResults([]);
-			return;
-		}
-
-		const controller = new AbortController();
-		let cancelled = false;
-		const timer = setTimeout(() => {
-			setSearching(true);
-			searchAddress(trimmed, controller.signal)
-				.then((matches) => {
-					if (cancelled) return;
-					setResults(matches);
-					if (matches.length === 0) {
-						setSearchError(t("places.noAddress"));
-					}
-				})
-				.catch((error: unknown) => {
-					if (cancelled) return;
-					if (error instanceof Error && error.name === "AbortError") return;
-					setSearchError(
-						error instanceof Error ? error.message : t("places.searchFailed"),
-					);
-				})
-				.finally(() => {
-					if (!cancelled) setSearching(false);
-				});
-		}, 400);
-
-		return () => {
-			cancelled = true;
-			controller.abort();
-			clearTimeout(timer);
-		};
-	}, [query, t]);
-
 	const applyOffice = (lat: number, lng: number, label: string) => {
-		onChange({
-			office: {
+		placesSend({
+			type: "SET_OFFICE",
+			place: {
 				lat,
 				lng,
 				label,
 				radiusMeters: office?.radiusMeters ?? 150,
 			},
 		});
-		setQuery("");
-		setResults([]);
 	};
 
 	const applyHome = (lat: number, lng: number, label: string) => {
-		onChange({
-			home: {
+		placesSend({
+			type: "SET_HOME",
+			place: {
 				lat,
 				lng,
 				label,
@@ -102,30 +87,23 @@ export function PlaceSetup({
 		});
 	};
 
-	const useCurrentLocation = async () => {
-		setLocating(true);
-		setLocationError(null);
-		try {
-			const position = await currentPosition();
-			applyOffice(position.lat, position.lng, t("places.currentLocation"));
-		} catch (error) {
-			setLocationError(
-				error instanceof Error ? error.message : t("places.geoFailed"),
-			);
-		} finally {
-			setLocating(false);
-		}
+	const useCurrentLocation = () => {
+		placesSend({ type: "LOCATE", label: t("places.currentLocation") });
 	};
 
 	const suggestedWork = suggestPlace(clusters, "WORK");
 	const suggestedHome = suggestPlace(clusters, "HOME", home);
 
 	const handleMapPick = (point: LatLng) => {
+		const label =
+			pickTarget === "home"
+				? (home?.label ?? t("places.pinned"))
+				: (office?.label ?? t("places.pinned"));
 		if (pickTarget === "home") {
-			applyHome(point.lat, point.lng, home?.label ?? t("places.pinned"));
-			return;
+			applyHome(point.lat, point.lng, label);
+		} else {
+			applyOffice(point.lat, point.lng, label);
 		}
-		applyOffice(point.lat, point.lng, office?.label ?? t("places.pinned"));
 	};
 
 	const workSuggestion =
@@ -142,7 +120,7 @@ export function PlaceSetup({
 						<Button
 							size="sm"
 							variant="secondary"
-							onClick={() => setEditing(true)}
+							onClick={() => placesSend({ type: "OPEN_EDITOR" })}
 						>
 							{t("places.editOnMap")}
 						</Button>
@@ -173,7 +151,7 @@ export function PlaceSetup({
 									size="sm"
 									variant="ghost"
 									className="mt-2 -ml-2"
-									onClick={() => setEditing(true)}
+									onClick={() => placesSend({ type: "OPEN_EDITOR" })}
 								>
 									{t("places.change")}
 								</Button>
@@ -202,7 +180,7 @@ export function PlaceSetup({
 									<Button
 										size="sm"
 										variant="secondary"
-										onClick={() => setEditing(true)}
+										onClick={() => placesSend({ type: "OPEN_EDITOR" })}
 									>
 										{t("places.pickOnMap")}
 									</Button>
@@ -234,7 +212,7 @@ export function PlaceSetup({
 									size="sm"
 									variant="ghost"
 									className="mt-2 -ml-2"
-									onClick={() => setEditing(true)}
+									onClick={() => placesSend({ type: "OPEN_EDITOR" })}
 								>
 									{t("places.change")}
 								</Button>
@@ -263,7 +241,7 @@ export function PlaceSetup({
 									<Button
 										size="sm"
 										variant="ghost"
-										onClick={() => setEditing(true)}
+										onClick={() => placesSend({ type: "OPEN_EDITOR" })}
 									>
 										{t("places.pickOnMap")}
 									</Button>
@@ -301,7 +279,7 @@ export function PlaceSetup({
 						<Button
 							size="sm"
 							variant="secondary"
-							onClick={() => setEditing(false)}
+							onClick={() => placesSend({ type: "CLOSE_EDITOR" })}
 						>
 							{t("places.done")}
 						</Button>
@@ -314,13 +292,23 @@ export function PlaceSetup({
 					office={office}
 					home={home}
 					pickTarget={pickTarget}
-					onPickTargetChange={setPickTarget}
+					onPickTargetChange={(target) =>
+						placesSend({ type: "SET_PICK_TARGET", target })
+					}
 					onPick={handleMapPick}
 					onMoveOffice={(point) => {
-						if (office) onChange({ office: { ...office, ...point } });
+						if (office)
+							placesSend({
+								type: "SET_OFFICE",
+								place: { ...office, ...point },
+							});
 					}}
 					onMoveHome={(point) => {
-						if (home) onChange({ home: { ...home, ...point } });
+						if (home)
+							placesSend({
+								type: "SET_HOME",
+								place: { ...home, ...point },
+							});
 					}}
 				/>
 			</div>
@@ -335,7 +323,12 @@ export function PlaceSetup({
 							value={query}
 							aria-label={t("places.addressLabel")}
 							placeholder={t("places.addressPlaceholder")}
-							onChange={(event) => setQuery(event.target.value)}
+							onChange={(event) =>
+								placesSend({
+									type: "QUERY_CHANGED",
+									query: event.target.value,
+								})
+							}
 						/>
 					</Field>
 
@@ -394,7 +387,7 @@ export function PlaceSetup({
 							<Button
 								size="sm"
 								variant="danger"
-								onClick={() => onChange({ office: null })}
+								onClick={() => placesSend({ type: "CLEAR_OFFICE" })}
 							>
 								{t("places.clearOffice")}
 							</Button>
@@ -483,7 +476,7 @@ export function PlaceSetup({
 									<Button
 										size="sm"
 										variant="ghost"
-										onClick={() => onChange({ home: null })}
+										onClick={() => placesSend({ type: "CLEAR_HOME" })}
 									>
 										{t("places.autoHome")}
 									</Button>
@@ -598,7 +591,11 @@ export function PlaceSetup({
 						{t("places.next")}
 					</Button>
 				) : (
-					<Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+					<Button
+						size="sm"
+						variant="ghost"
+						onClick={() => placesSend({ type: "CLOSE_EDITOR" })}
+					>
 						{t("places.back")}
 					</Button>
 				)}

@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useActor } from "@xstate/react";
 import { useI18n } from "../lib/i18n";
+import { type LocalFile, localDataMachine } from "../machines/localDataMachine";
 import { Button, Card } from "./ui";
-
-type LocalFile = { name: string; size: number };
 
 function formatBytes(bytes: number): string {
 	if (bytes < 1024) return `${bytes} B`;
@@ -22,43 +21,23 @@ export function LocalDataPanel({
 	disabled: boolean;
 }) {
 	const { t } = useI18n();
-	const [files, setFiles] = useState<LocalFile[]>([]);
-	const [loading, setLoading] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
+	const [localSnapshot, localSend] = useActor(localDataMachine, {
+		input: { onFile },
+	});
+	const files: LocalFile[] = localSnapshot.context.files;
+	const loading = localSnapshot.context.loadingName;
+	const error = localSnapshot.context.error;
 
-	useEffect(() => {
-		let cancelled = false;
-		fetch("/__local-data")
-			.then((response) => response.json())
-			.then((payload: { files?: LocalFile[] }) => {
-				if (!cancelled) setFiles(payload.files ?? []);
-			})
-			.catch(() => {
-				// The middleware only exists while `vite dev` runs.
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, []);
+	if (
+		!localSnapshot.matches("listed") &&
+		!localSnapshot.matches("loading") &&
+		!localSnapshot.matches("failure")
+	) {
+		return null;
+	}
 
-	if (files.length === 0) return null;
-
-	const load = async (name: string) => {
-		setLoading(name);
-		setError(null);
-		try {
-			const response = await fetch(`/data/${encodeURIComponent(name)}`);
-			if (!response.ok)
-				throw new Error(`Could not read ${name} (${response.status})`);
-			const text = await response.text();
-			onFile(new File([text], name, { type: "application/json" }));
-		} catch (caught) {
-			setError(
-				caught instanceof Error ? caught.message : t("local.readFailed"),
-			);
-		} finally {
-			setLoading(null);
-		}
+	const load = (name: string) => {
+		localSend({ type: "LOAD", name });
 	};
 
 	return (

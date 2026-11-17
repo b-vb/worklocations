@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useActor } from "@xstate/react";
+import { useMemo } from "react";
 import { useI18n } from "../lib/i18n";
 import { dayKeyToWallStart, formatClock } from "../lib/time";
 import type { DayRow, DayStatus, Override } from "../lib/timeline/days";
+import { dayTableMachine } from "../machines/dayTableMachine";
 import {
 	Badge,
 	Button,
@@ -37,7 +39,7 @@ const STATUS_KEY: Record<DayStatus, string> = {
 
 export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 	const { t } = useI18n();
-	const [filter, setFilter] = useState<Filter | null>(null);
+	const [tableSnapshot, tableSend] = useActor(dayTableMachine);
 
 	const reviewCount = rows.filter(
 		(row) => row.included && row.needsReview,
@@ -45,10 +47,17 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 	const includedCount = rows.filter((row) => row.included).length;
 	const overrideCount = rows.filter((row) => row.override !== undefined).length;
 
-	// Start on the days that actually need a human decision. Once the user picks
-	// a filter, their choice wins.
-	const activeFilter: Filter =
-		filter ?? (reviewCount > 0 ? "review" : "included");
+	// Auto follows the review count; an explicit choice wins until the next
+	// dataset is imported.
+	const activeFilter: Filter = tableSnapshot.matches("auto")
+		? reviewCount > 0
+			? "review"
+			: "included"
+		: tableSnapshot.matches("review")
+			? "review"
+			: tableSnapshot.matches("all")
+				? "all"
+				: "included";
 
 	const filtered = useMemo(() => {
 		const visible = rows.filter((row) => {
@@ -89,8 +98,24 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 					<Button
 						key={value}
 						size="sm"
-						variant={activeFilter === value ? "primary" : "ghost"}
-						onClick={() => setFilter(value)}
+						variant={
+							(value === "review" && activeFilter === "review") ||
+							(value === "included" && activeFilter === "included") ||
+							(value === "all" && activeFilter === "all")
+								? "primary"
+								: "ghost"
+						}
+						onClick={() =>
+							tableSend({
+								type: "SELECT",
+								filter:
+									value === "included"
+										? "workdays"
+										: value === "review"
+											? "review"
+											: "all",
+							})
+						}
 					>
 						{label}
 					</Button>
