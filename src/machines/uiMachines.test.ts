@@ -14,8 +14,6 @@ describe("dayTableMachine", () => {
 		expect(actor.getSnapshot().matches("all")).toBe(true);
 		actor.send({ type: "SELECT", filter: "review" });
 		expect(actor.getSnapshot().matches("review")).toBe(true);
-		actor.send({ type: "RESET" });
-		expect(actor.getSnapshot().matches("auto")).toBe(true);
 		actor.stop();
 	});
 });

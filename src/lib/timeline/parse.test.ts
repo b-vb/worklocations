@@ -79,11 +79,11 @@ const android = {
 
 describe("detectFormat", () => {
 	it("recognises Android and iOS shapes", () => {
-		expect(detectFormat(android)).toBe("device");
+		expect(detectFormat(android)).toBe(true);
 		expect(
 			detectFormat([{ startTime: "2026-01-01T00:00:00Z", visit: {} }]),
-		).toBe("device");
-		expect(detectFormat({ hello: "world" })).toBeNull();
+		).toBe(true);
+		expect(detectFormat({ hello: "world" })).toBe(false);
 	});
 });
 

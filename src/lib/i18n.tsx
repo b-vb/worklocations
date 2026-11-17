@@ -29,6 +29,7 @@ const nl = {
 	"app.closeData": "Sluit bestand",
 	"app.language": "Taal",
 
+	"result.title": "Resultaat",
 	"intro.title": "Zo werkt het",
 	"intro.subtitle":
 		"Drie stappen. Je locatiegeschiedenis blijft in je browser.",
@@ -131,8 +132,6 @@ const nl = {
 	"places.officeBadge": "kantoor",
 	"places.homeBadge": "thuis",
 	"places.currentLocation": "Huidige locatie",
-	"places.officeEmpty":
-		"Nog geen kantoor. Tot die tijd gelden plekken die Google WORK noemt als kantoor.",
 	"places.mostVisited": "Meest bezochte plek",
 	"places.homeAuto": "Thuis — automatisch",
 	"places.homeAutoHint":
@@ -309,6 +308,7 @@ const en: Translation = {
 	"app.closeData": "Close data",
 	"app.language": "Language",
 
+	"result.title": "Result",
 	"intro.title": "How it works",
 	"intro.subtitle": "Three steps. Your location history stays in your browser.",
 	"intro.step1.title": "1. Open the export",
@@ -411,8 +411,6 @@ const en: Translation = {
 	"places.officeBadge": "office",
 	"places.homeBadge": "home",
 	"places.currentLocation": "Current location",
-	"places.officeEmpty":
-		"No office set yet. Until then, places Google labels WORK are treated as office.",
 	"places.mostVisited": "Most visited place",
 	"places.homeAuto": "Home — auto",
 	"places.homeAutoHint":

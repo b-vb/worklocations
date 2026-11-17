@@ -425,9 +425,6 @@ export function PlaceSetup({
 						</div>
 					) : (
 						<div className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-700">
-							<p className="text-xs text-slate-500 dark:text-slate-400">
-								{t("places.officeEmpty")}
-							</p>
 							{suggestedWork ? (
 								<Button
 									size="sm"

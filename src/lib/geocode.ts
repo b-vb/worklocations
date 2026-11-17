@@ -4,30 +4,27 @@ export type AddressResult = {
 	lng: number;
 };
 
+import { asRecord, asString } from "./guards";
+
 type Rec = Record<string, unknown>;
 
-function asRec(value: unknown): Rec | null {
-	return value && typeof value === "object" && !Array.isArray(value)
-		? (value as Rec)
-		: null;
-}
-
-function text(value: unknown): string {
-	return typeof value === "string" ? value : "";
-}
-
 function buildLabel(properties: Rec): string {
-	const street = [text(properties.street), text(properties.housenumber)]
-		.filter(Boolean)
-		.join(" ");
-	const city = [
-		text(properties.postcode),
-		text(properties.city ?? properties.locality),
+	const street = [
+		asString(properties.street) ?? "",
+		asString(properties.housenumber) ?? "",
 	]
 		.filter(Boolean)
 		.join(" ");
-	const name = text(properties.name);
-	const parts = [name, street, city, text(properties.country)].filter(Boolean);
+	const city = [
+		asString(properties.postcode) ?? "",
+		asString(properties.city ?? properties.locality) ?? "",
+	]
+		.filter(Boolean)
+		.join(" ");
+	const name = asString(properties.name) ?? "";
+	const parts = [name, street, city, asString(properties.country) ?? ""].filter(
+		Boolean,
+	);
 	return parts.join(", ");
 }
 
@@ -52,18 +49,18 @@ export async function searchAddress(
 		throw new Error(`Address lookup failed (HTTP ${response.status})`);
 	}
 
-	const payload = asRec(await response.json());
+	const payload = asRecord(await response.json());
 	const results: AddressResult[] = [];
 	for (const raw of Array.isArray(payload?.features) ? payload.features : []) {
-		const feature = asRec(raw);
-		const geometry = asRec(feature?.geometry);
+		const feature = asRecord(raw);
+		const geometry = asRecord(feature?.geometry);
 		const coordinates = Array.isArray(geometry?.coordinates)
 			? geometry.coordinates
 			: [];
 		const lng = Number(coordinates[0]);
 		const lat = Number(coordinates[1]);
 		if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-		const label = buildLabel(asRec(feature?.properties) ?? {});
+		const label = buildLabel(asRecord(feature?.properties) ?? {});
 		if (!label) continue;
 		results.push({ label, lat, lng });
 	}

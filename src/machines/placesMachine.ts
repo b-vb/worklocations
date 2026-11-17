@@ -10,7 +10,7 @@ import type { PlaceSetting } from "../lib/settings";
 type PlacesContext = {
 	office: PlaceSetting | null;
 	home: PlaceSetting | null;
-	pickTarget: "office" | "home";
+	pickTarget: PickTarget;
 	query: string;
 	results: AddressResult[];
 	searchError: string | null;
@@ -19,6 +19,8 @@ type PlacesContext = {
 	onOffice: (place: PlaceSetting | null) => void;
 	onHome: (place: PlaceSetting | null) => void;
 };
+
+export type PickTarget = "office" | "home";
 
 type PlacesInput = {
 	office: PlaceSetting | null;
@@ -47,7 +49,7 @@ const placesSetup = setup({
 		events: {
 			OPEN_EDITOR: types<void>(),
 			CLOSE_EDITOR: types<void>(),
-			SET_PICK_TARGET: types<{ target: "office" | "home" }>(),
+			SET_PICK_TARGET: types<{ target: PickTarget }>(),
 			SYNC: types<{
 				office: PlaceSetting | null;
 				home: PlaceSetting | null;
@@ -84,40 +86,42 @@ export const placesMachine = placesSetup.createMachine({
 		onHome: input.onHome,
 	}),
 	initial: "suggestions",
+	on: {
+		SYNC: ({ context, event }) => ({
+			context: {
+				...context,
+				office: event.office,
+				home: event.home,
+			},
+		}),
+		SET_OFFICE: ({ context, event }, enq) => {
+			enq(() => context.onOffice(event.place));
+			return {
+				context: {
+					...context,
+					office: event.place,
+					query: "",
+					results: [],
+				},
+			};
+		},
+		SET_HOME: ({ context, event }, enq) => {
+			enq(() => context.onHome(event.place));
+			return { context: { ...context, home: event.place } };
+		},
+		CLEAR_OFFICE: ({ context }, enq) => {
+			enq(() => context.onOffice(null));
+			return { context: { ...context, office: null } };
+		},
+		CLEAR_HOME: ({ context }, enq) => {
+			enq(() => context.onHome(null));
+			return { context: { ...context, home: null } };
+		},
+	},
 	states: {
 		suggestions: {
 			on: {
 				OPEN_EDITOR: { target: "editing" },
-				SYNC: ({ context, event }) => ({
-					context: {
-						...context,
-						office: event.office,
-						home: event.home,
-					},
-				}),
-				SET_OFFICE: ({ context, event }, enq) => {
-					enq(() => context.onOffice(event.place));
-					return {
-						context: {
-							...context,
-							office: event.place,
-							query: "",
-							results: [],
-						},
-					};
-				},
-				SET_HOME: ({ context, event }, enq) => {
-					enq(() => context.onHome(event.place));
-					return { context: { ...context, home: event.place } };
-				},
-				CLEAR_OFFICE: ({ context }, enq) => {
-					enq(() => context.onOffice(null));
-					return { context: { ...context, office: null } };
-				},
-				CLEAR_HOME: ({ context }, enq) => {
-					enq(() => context.onHome(null));
-					return { context: { ...context, home: null } };
-				},
 			},
 		},
 
@@ -125,39 +129,9 @@ export const placesMachine = placesSetup.createMachine({
 			type: "parallel",
 			on: {
 				CLOSE_EDITOR: { target: "suggestions" },
-				SYNC: ({ context, event }) => ({
-					context: {
-						...context,
-						office: event.office,
-						home: event.home,
-					},
-				}),
 				SET_PICK_TARGET: ({ context, event }) => ({
 					context: { ...context, pickTarget: event.target },
 				}),
-				SET_OFFICE: ({ context, event }, enq) => {
-					enq(() => context.onOffice(event.place));
-					return {
-						context: {
-							...context,
-							office: event.place,
-							query: "",
-							results: [],
-						},
-					};
-				},
-				SET_HOME: ({ context, event }, enq) => {
-					enq(() => context.onHome(event.place));
-					return { context: { ...context, home: event.place } };
-				},
-				CLEAR_OFFICE: ({ context }, enq) => {
-					enq(() => context.onOffice(null));
-					return { context: { ...context, office: null } };
-				},
-				CLEAR_HOME: ({ context }, enq) => {
-					enq(() => context.onHome(null));
-					return { context: { ...context, home: null } };
-				},
 			},
 			states: {
 				search: {

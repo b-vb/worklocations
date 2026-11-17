@@ -1,5 +1,7 @@
-import { haversineMeters, type LatLng } from "../geo";
+import { haversineMeters, type LatLng, type PlaceSetting } from "../geo";
+import type { DayRange } from "../period";
 import {
+	clampHour,
 	DAY_MS,
 	dayKey,
 	dayKeyToWallStart,
@@ -9,11 +11,6 @@ import {
 	weekdayOfDayKey,
 } from "../time";
 import type { ParsedHistory } from "./types";
-
-type PlaceConfig = LatLng & {
-	radiusMeters: number;
-	label?: string;
-};
 
 type Label = "office" | "home" | "other";
 export type DayStatus = "office" | "home" | "other" | "no-data" | "pto";
@@ -40,11 +37,19 @@ type DayRecord = {
 	slices: DaySlice[];
 };
 
+export type ClassifySettings = {
+	office: PlaceSetting | null;
+	home: PlaceSetting | null;
+	minOfficeMinutes: number;
+	windowStartHour: number;
+	windowEndHour: number;
+};
+
 export type ClassifyConfig = {
 	from: string;
 	to: string;
-	office: PlaceConfig | null;
-	home: PlaceConfig | null;
+	office: PlaceSetting | null;
+	home: PlaceSetting | null;
 	minOfficeMinutes: number;
 	/** Used for status. Defaults to 07:00–19:00. */
 	workWindow?: { startHour: number; endHour: number };
@@ -73,11 +78,6 @@ const PRECEDENCE: Record<Label, number> = { office: 3, home: 2, other: 1 };
 const MAX_POSITION_SLICE = 15 * MINUTE_MS;
 const HOUR_MS = 60 * MINUTE_MS;
 
-function clampHour(hour: number, fallback: number): number {
-	if (!Number.isFinite(hour) || hour < 0 || hour > 24) return fallback;
-	return hour;
-}
-
 function labelFor(
 	point: LatLng,
 	semanticType: string | undefined,
@@ -87,8 +87,8 @@ function labelFor(
 	if (office && haversineMeters(point, office) <= office.radiusMeters)
 		return "office";
 	if (home && haversineMeters(point, home) <= home.radiusMeters) return "home";
-	// Before the user has pinned a place, trust Google's own labels.
-	if (!office && semanticType === "WORK") return "office";
+	// Home may stay unpinned; rows are not built until an office exists, so
+	// Google's HOME label is the only label fallback that can matter.
 	if (!home && semanticType === "HOME") return "home";
 	return "other";
 }
@@ -224,6 +224,25 @@ function statusFor(
 	if (otherMinutes >= Math.min(minOfficeMinutes, 60)) return "other";
 	if (totalMinutes >= 60) return "other";
 	return "no-data";
+}
+
+/** Maps the persisted settings onto the classification config. */
+export function makeClassifyConfig(
+	range: DayRange | null,
+	settings: ClassifySettings,
+): ClassifyConfig | null {
+	if (!range) return null;
+	return {
+		from: range.from,
+		to: range.to,
+		office: settings.office,
+		home: settings.home,
+		minOfficeMinutes: settings.minOfficeMinutes,
+		workWindow: {
+			startHour: settings.windowStartHour,
+			endHour: settings.windowEndHour,
+		},
+	};
 }
 
 /** Builds one record per calendar day in the configured range. */

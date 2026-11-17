@@ -23,6 +23,15 @@ type Props = {
 
 type Filter = "included" | "review" | "all";
 
+const MACHINE_FILTERS: Record<
+	Exclude<Filter, "auto">,
+	"review" | "workdays" | "all"
+> = {
+	included: "workdays",
+	review: "review",
+	all: "all",
+};
+
 const STATUS_TONE: Record<
 	DayStatus,
 	"office" | "home" | "other" | "pto" | "muted"
@@ -113,12 +122,7 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 						onClick={() =>
 							tableSend({
 								type: "SELECT",
-								filter:
-									value === "included"
-										? "workdays"
-										: value === "review"
-											? "review"
-											: "all",
+								filter: MACHINE_FILTERS[value],
 							})
 						}
 					>

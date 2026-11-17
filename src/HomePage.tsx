@@ -6,19 +6,17 @@ import { ExportPanel } from "./components/ExportPanel";
 import { LocalDataPanel } from "./components/LocalDataPanel";
 import { LocaleSwitcher } from "./components/LocaleSwitcher";
 import { PlaceSetup } from "./components/PlaceSetup";
-import {
-	type Range,
-	RangeControls,
-	rangeBounds,
-} from "./components/RangeControls";
+import { RangeControls } from "./components/RangeControls";
 import { Summary } from "./components/Summary";
 import { Badge, Button, Card, SectionHeader } from "./components/ui";
 import { holidaysInRange } from "./lib/holidays";
 import { useI18n } from "./lib/i18n";
+import { type DayRange, rangeBounds } from "./lib/period";
 import { type AppSettings, saveOverrides, saveSettings } from "./lib/settings";
 import {
 	buildDayRows,
 	clusterPlaces,
+	makeClassifyConfig,
 	type Override,
 	summarize,
 } from "./lib/timeline/days";
@@ -29,10 +27,6 @@ import { preferencesMachine } from "./machines/preferencesMachine";
 function scrollTo(ref: RefObject<HTMLDivElement | null>) {
 	ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-
-const FORMAT_LABEL: Record<string, string> = {
-	device: "format.device",
-};
 
 export function Home() {
 	const { t, formatDay } = useI18n();
@@ -54,7 +48,7 @@ export function Home() {
 	officeRef.current = settings.office;
 
 	const office = settings.office;
-	const range: Range | null = periodSnapshot.matches("selected")
+	const range: DayRange | null = periodSnapshot.matches("selected")
 		? { from: periodSnapshot.context.from, to: periodSnapshot.context.to }
 		: null;
 
@@ -112,27 +106,10 @@ export function Home() {
 		[history],
 	);
 
-	const classify = useMemo(() => {
-		if (!range) return null;
-		return {
-			from: range.from,
-			to: range.to,
-			office: settings.office,
-			home: settings.home,
-			minOfficeMinutes: settings.minOfficeMinutes,
-			workWindow: {
-				startHour: settings.windowStartHour,
-				endHour: settings.windowEndHour,
-			},
-		};
-	}, [
-		range,
-		settings.office,
-		settings.home,
-		settings.minOfficeMinutes,
-		settings.windowStartHour,
-		settings.windowEndHour,
-	]);
+	const classify = useMemo(
+		() => makeClassifyConfig(range, settings),
+		[range, settings],
+	);
 
 	const rows = useMemo(() => {
 		if (!history || !classify || !range || !classify.office) return [];
@@ -339,8 +316,7 @@ export function Home() {
 									</p>
 									{history.files.map((file) => (
 										<p key={file.name} className="font-mono">
-											{file.name} ·{" "}
-											{t(FORMAT_LABEL[file.format] ?? "format.device")} ·{" "}
+											{file.name} · {t("format.device")} ·{" "}
 											{t("loaded.visit", { count: file.visits })} ·{" "}
 											{t("loaded.point", { count: file.points })}
 											{file.error ? ` · ${file.error}` : ""}
@@ -418,7 +394,7 @@ export function Home() {
 									className="scroll-mt-4 flex items-center gap-2"
 								>
 									<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-										Result
+										{t("result.title")}
 									</h2>
 									<span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
 								</div>

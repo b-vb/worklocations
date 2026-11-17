@@ -1,12 +1,8 @@
 import { type CsvOptions, defaultCsvOptions } from "./csv";
+import type { PlaceSetting } from "./geo";
 import type { Override } from "./timeline/days";
 
-export type PlaceSetting = {
-	lat: number;
-	lng: number;
-	label?: string;
-	radiusMeters: number;
-};
+export type { PlaceSetting };
 
 export type AppSettings = {
 	office: PlaceSetting | null;
@@ -55,6 +51,38 @@ function isPlace(value: unknown): value is PlaceSetting {
  */
 const SETTINGS_VERSION = 2;
 
+const CSV_DEFAULTS_V1 = {
+	...defaultCsvOptions,
+	includeDay: true,
+	includeMinutes: true,
+};
+
+/**
+ * v1 storage cannot tell a user's explicit column choices from the old
+ * defaults. If nothing else in the CSV options was customised, apply the new
+ * quieter defaults; if the user changed anything else, trust all their choices.
+ */
+function migrateCsv(csv: CsvOptions): CsvOptions {
+	const customizedElsewhere = (
+		[
+			"delimiter",
+			"dateStyle",
+			"labels",
+			"includeTimes",
+			"includeSource",
+			"includeNotes",
+			"onlyClassified",
+			"bom",
+		] as const
+	).some((key) => csv[key] !== CSV_DEFAULTS_V1[key]);
+	if (customizedElsewhere) return csv;
+	return {
+		...csv,
+		includeDay: defaultCsvOptions.includeDay,
+		includeMinutes: defaultCsvOptions.includeMinutes,
+	};
+}
+
 export function loadSettings(): AppSettings {
 	if (typeof localStorage === "undefined") return defaultSettings;
 	try {
@@ -80,12 +108,10 @@ export function loadSettings(): AppSettings {
 				typeof stored.windowStartHour === "number" ? stored.windowStartHour : 7,
 			windowEndHour:
 				typeof stored.windowEndHour === "number" ? stored.windowEndHour : 19,
-			// Old storage predates the quieter default columns, so start those
-			// users from the new defaults once.
 			csv:
 				version >= SETTINGS_VERSION
 					? { ...defaultCsvOptions, ...(stored.csv ?? {}) }
-					: defaultCsvOptions,
+					: migrateCsv({ ...defaultCsvOptions, ...(stored.csv ?? {}) }),
 		};
 	} catch {
 		return defaultSettings;

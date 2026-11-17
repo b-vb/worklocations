@@ -1,4 +1,5 @@
 import { parseLatLng } from "../geo";
+import { asNumber, asRecord, asString } from "../guards";
 import { MINUTE_MS, parseWallClock } from "../time";
 import type {
 	FileReport,
@@ -6,51 +7,31 @@ import type {
 	ParsedHistory,
 	ParsedPoint,
 	ParsedVisit,
-	TimelineFormat,
 } from "./types";
 
 type Rec = Record<string, unknown>;
-
-function asRec(value: unknown): Rec | null {
-	return value && typeof value === "object" && !Array.isArray(value)
-		? (value as Rec)
-		: null;
-}
 
 function asArray(value: unknown): unknown[] {
 	return Array.isArray(value) ? value : [];
 }
 
-function asString(value: unknown): string | undefined {
-	return typeof value === "string" && value.trim() !== "" ? value : undefined;
-}
-
-function asNumber(value: unknown): number | undefined {
-	if (typeof value === "number" && Number.isFinite(value)) return value;
-	if (typeof value === "string" && value.trim() !== "") {
-		const parsed = Number(value);
-		if (Number.isFinite(parsed)) return parsed;
-	}
-	return undefined;
-}
-
-export function detectFormat(root: unknown): TimelineFormat | null {
-	const rec = asRec(root);
+export function detectFormat(root: unknown): boolean {
+	const rec = asRecord(root);
 
 	if (
 		rec &&
 		(Array.isArray(rec.semanticSegments) ||
 			Array.isArray(rec.rawSignals) ||
-			asRec(rec.userLocationProfile) !== null)
+			asRecord(rec.userLocationProfile) !== null)
 	) {
-		return "device";
+		return true;
 	}
 
 	// iOS exports are a bare array of segments. Sample a few entries, because a
 	// file can start with a breadcrumb-only segment.
 	if (Array.isArray(root)) {
 		const looksLikeSegments = root.slice(0, 5).some((entry) => {
-			const seg = asRec(entry);
+			const seg = asRecord(entry);
 			if (!seg) return false;
 			return (
 				asString(seg.startTime) !== undefined &&
@@ -59,15 +40,15 @@ export function detectFormat(root: unknown): TimelineFormat | null {
 					Array.isArray(seg.timelinePath))
 			);
 		});
-		if (looksLikeSegments) return "device";
+		if (looksLikeSegments) return true;
 	}
 
 	// A single segment object is still usable.
 	if (rec && asString(rec.startTime) && (rec.visit || rec.activity)) {
-		return "device";
+		return true;
 	}
 
-	return null;
+	return false;
 }
 
 type SegmentTimes = { startWall: number; endWall: number; durationMs: number };
@@ -118,7 +99,7 @@ function addVisit(
 	}
 	// Anything under a minute is noise for our purposes.
 	if (times.durationMs < MINUTE_MS) return;
-	const topCandidate = asRec(visitRecord.topCandidate);
+	const topCandidate = asRecord(visitRecord.topCandidate);
 	acc.visits.push({
 		startWall: times.startWall,
 		endWall: times.endWall,
@@ -138,7 +119,7 @@ function addPath(
 	offsetMinutes: number,
 ) {
 	for (const raw of asArray(seg.timelinePath)) {
-		const entry = asRec(raw);
+		const entry = asRecord(raw);
 		if (!entry) continue;
 		const point = parseLatLng(entry.point ?? entry.latLng);
 		if (!point) continue;
@@ -157,18 +138,18 @@ function addPath(
 }
 
 function parseDevice(root: unknown, acc: Accumulator, fileName: string) {
-	const rec = asRec(root);
+	const rec = asRecord(root);
 	const segments = Array.isArray(root) ? root : asArray(rec?.semanticSegments);
 
 	for (const raw of segments) {
-		const seg = asRec(raw);
+		const seg = asRecord(raw);
 		if (!seg) continue;
 		const times = segmentTimes(seg, acc.warnings, fileName);
 		if (!times) continue;
 
-		const visit = asRec(seg.visit);
+		const visit = asRecord(seg.visit);
 		if (visit) {
-			addVisit(acc, times, asRec(visit.topCandidate)?.placeLocation, visit);
+			addVisit(acc, times, asRecord(visit.topCandidate)?.placeLocation, visit);
 		}
 
 		if (Array.isArray(seg.timelinePath)) {
@@ -182,7 +163,7 @@ function parseDevice(root: unknown, acc: Accumulator, fileName: string) {
 	}
 
 	for (const raw of asArray(rec?.rawSignals)) {
-		const position = asRec(asRec(raw)?.position);
+		const position = asRecord(asRecord(raw)?.position);
 		if (!position) continue;
 		const point = parseLatLng(position.LatLng ?? position.latLng);
 		const time = parseWallClock(position.timestamp, 0);
@@ -195,9 +176,9 @@ function parseDevice(root: unknown, acc: Accumulator, fileName: string) {
 		});
 	}
 
-	const profile = asRec(rec?.userLocationProfile);
+	const profile = asRecord(rec?.userLocationProfile);
 	for (const raw of asArray(profile?.frequentPlaces)) {
-		const place = asRec(raw);
+		const place = asRecord(raw);
 		if (!place) continue;
 		const point = parseLatLng(place.placeLocation);
 		if (!point) continue;
@@ -219,26 +200,33 @@ function visitKey(visit: ParsedVisit): string {
 	].join("|");
 }
 
-function dedupeVisits(visits: ParsedVisit[]): ParsedVisit[] {
-	const seen = new Map<string, ParsedVisit>();
-	for (const visit of visits) {
-		const key = visitKey(visit);
-		const existing = seen.get(key);
-		// Prefer the duplicate that carries Google's own label.
-		if (!existing || (!existing.semanticType && visit.semanticType)) {
-			seen.set(key, visit);
-		}
+function dedupe<T>(
+	items: T[],
+	keyFor: (item: T) => string,
+	prefer: (current: T, next: T) => boolean = () => false,
+): T[] {
+	const seen = new Map<string, T>();
+	for (const item of items) {
+		const key = keyFor(item);
+		const current = seen.get(key);
+		if (!current || prefer(current, item)) seen.set(key, item);
 	}
-	return [...seen.values()].sort((a, b) => a.startWall - b.startWall);
+	return [...seen.values()];
+}
+
+function dedupeVisits(visits: ParsedVisit[]): ParsedVisit[] {
+	// Prefer the duplicate that carries Google's own label.
+	return dedupe(visits, visitKey, (current, next) =>
+		Boolean(!current.semanticType && next.semanticType),
+	).sort((a, b) => a.startWall - b.startWall);
 }
 
 function dedupePoints(points: ParsedPoint[]): ParsedPoint[] {
-	const seen = new Map<string, ParsedPoint>();
-	for (const point of points) {
-		const key = `${Math.round(point.wall / MINUTE_MS)}|${point.lat.toFixed(5)}|${point.lng.toFixed(5)}`;
-		if (!seen.has(key)) seen.set(key, point);
-	}
-	return [...seen.values()].sort((a, b) => a.wall - b.wall);
+	return dedupe(
+		points,
+		(point) =>
+			`${Math.round(point.wall / MINUTE_MS)}|${point.lat.toFixed(5)}|${point.lng.toFixed(5)}`,
+	).sort((a, b) => a.wall - b.wall);
 }
 
 export type ParseInput = { name: string; bytes: number; text: string };
@@ -276,8 +264,7 @@ export function parseTimelineJson(inputs: ParseInput[]): ParsedHistory {
 			continue;
 		}
 
-		const format = detectFormat(root);
-		if (!format) {
+		if (!detectFormat(root)) {
 			report.error = "Unrecognised format";
 			files.push(report);
 			acc.warnings.push(
@@ -286,7 +273,7 @@ export function parseTimelineJson(inputs: ParseInput[]): ParsedHistory {
 			continue;
 		}
 
-		report.format = format;
+		report.format = "device";
 		const visitsBefore = acc.visits.length;
 		const pointsBefore = acc.points.length;
 

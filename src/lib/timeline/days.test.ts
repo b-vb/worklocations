@@ -98,6 +98,30 @@ describe("buildDayRows", () => {
 		);
 	});
 
+	it("classifies home when the afternoon at home beats a short office morning", () => {
+		const rows = buildDayRows(
+			history([
+				visit("2026-05-04", 8, 9, OFFICE, "WORK"),
+				visit("2026-05-04", 9.5, 17, HOME, "HOME"),
+			]),
+			config,
+			options,
+		);
+		const monday = rows.find((row) => row.date === "2026-05-04");
+		expect(monday?.status).toBe("home");
+	});
+
+	it("sends short days below both thresholds to review", () => {
+		const rows = buildDayRows(
+			history([visit("2026-05-04", 9, 10, HOME, "HOME")]),
+			config,
+			options,
+		);
+		const monday = rows.find((row) => row.date === "2026-05-04");
+		expect(monday?.status).toBe("other");
+		expect(monday?.needsReview).toBe(true);
+	});
+
 	it("uses home when the office visit is below the threshold", () => {
 		const rows = buildDayRows(
 			history([

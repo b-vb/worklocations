@@ -1,5 +1,5 @@
 import { setup, types } from "xstate";
-import type { ParseProgress } from "../lib/timeline/load";
+import type { ParseProgress } from "../lib/timeline/progress";
 import type { ParsedHistory } from "../lib/timeline/types";
 import { parserLogic } from "./parser";
 
@@ -40,9 +40,6 @@ const importSetup = setup({
 			"parser.error": types<{ error: string }>(),
 		},
 	},
-	guards: {
-		hasHistory: ({ context }) => context.history !== null,
-	},
 });
 
 export const importMachine = importSetup.createMachine({
@@ -52,21 +49,34 @@ export const importMachine = importSetup.createMachine({
 		completed: 0,
 	},
 	initial: "idle",
-	states: {
-		idle: {
-			on: {
-				FILES: ({ context, event }) => ({
-					target: "importing",
-					context: {
-						...context,
-						pendingFiles: event.files,
-						error: null,
-						progress: null,
-						uploaderOpen: true,
-					},
-				}),
+	on: {
+		FILES: ({ context, event }) => ({
+			target: ".importing",
+			reenter: true,
+			context: {
+				...context,
+				pendingFiles: event.files,
+				error: null,
+				progress: null,
+				uploaderOpen: true,
 			},
+		}),
+		OPEN_UPLOADER: ({ context }) => ({
+			context: { ...context, uploaderOpen: true },
+		}),
+		CLOSE_UPLOADER: ({ context }) => ({
+			context: { ...context, uploaderOpen: false },
+		}),
+		TOGGLE_DETAILS: ({ context }) => ({
+			context: { ...context, detailsOpen: !context.detailsOpen },
+		}),
+		CLOSE: {
+			target: ".idle",
+			context: { ...idleContext, completed: 0 },
 		},
+	},
+	states: {
+		idle: {},
 
 		importing: {
 			invoke: {
@@ -121,67 +131,10 @@ export const importMachine = importSetup.createMachine({
 						error: null,
 					},
 				}),
-				CLOSE: {
-					target: "idle",
-					context: { ...idleContext, completed: 0 },
-				},
 			},
 		},
 
-		ready: {
-			on: {
-				FILES: ({ context, event }) => ({
-					target: "importing",
-					context: {
-						...context,
-						pendingFiles: event.files,
-						error: null,
-						progress: null,
-						uploaderOpen: true,
-					},
-				}),
-				OPEN_UPLOADER: ({ context }) => ({
-					context: { ...context, uploaderOpen: true },
-				}),
-				CLOSE_UPLOADER: ({ context }) => ({
-					context: { ...context, uploaderOpen: false },
-				}),
-				TOGGLE_DETAILS: ({ context }) => ({
-					context: { ...context, detailsOpen: !context.detailsOpen },
-				}),
-				CLOSE: {
-					target: "idle",
-					context: { ...idleContext, completed: 0 },
-				},
-			},
-		},
-
-		error: {
-			on: {
-				FILES: ({ context, event }) => ({
-					target: "importing",
-					context: {
-						...context,
-						pendingFiles: event.files,
-						error: null,
-						progress: null,
-						uploaderOpen: true,
-					},
-				}),
-				OPEN_UPLOADER: ({ context }) => ({
-					context: { ...context, uploaderOpen: true },
-				}),
-				CLOSE_UPLOADER: ({ context }) => ({
-					context: { ...context, uploaderOpen: false },
-				}),
-				TOGGLE_DETAILS: ({ context }) => ({
-					context: { ...context, detailsOpen: !context.detailsOpen },
-				}),
-				CLOSE: {
-					target: "idle",
-					context: { ...idleContext, completed: 0 },
-				},
-			},
-		},
+		ready: {},
+		error: {},
 	},
 });

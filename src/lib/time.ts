@@ -155,6 +155,12 @@ export function addDaysKey(key: string, days: number): string {
 	return dayKey(dayKeyToWallStart(key) + days * DAY_MS);
 }
 
+/** A sane hour of day: non-finite values fall back, the rest clamp to 0..24. */
+export function clampHour(value: number, fallback: number): number {
+	if (!Number.isFinite(value)) return fallback;
+	return Math.min(24, Math.max(0, Math.round(value)));
+}
+
 export function formatDate(key: string, style: "iso" | "dmy" = "iso"): string {
 	if (style === "iso") return key;
 	const [year, month, day] = key.split("-");

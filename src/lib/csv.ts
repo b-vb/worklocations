@@ -1,5 +1,5 @@
 import { holidayLabel } from "./holidays";
-import { formatDate, localDayKey } from "./time";
+import { formatClock, formatDate, localDayKey } from "./time";
 import type { DayRow, DayStatus } from "./timeline/days";
 
 type CsvLabels = "nl" | "en";
@@ -195,12 +195,14 @@ function columnWriters(options: CsvOptions): ColumnWriter[] {
 					{
 						key: "first" as const,
 						header: headers.first,
-						value: (row: DayRow) => clockCell(row.firstWall),
+						value: (row: DayRow) =>
+							row.firstWall ? formatClock(row.firstWall) : "",
 					},
 					{
 						key: "last" as const,
 						header: headers.last,
-						value: (row: DayRow) => clockCell(row.lastWall),
+						value: (row: DayRow) =>
+							row.lastWall ? formatClock(row.lastWall) : "",
 					},
 				]
 			: []),
@@ -265,14 +267,6 @@ export function rowsToCsv(rows: DayRow[], options: CsvOptions): string {
 
 	const body = lines.join("\r\n");
 	return options.bom ? `\uFEFF${body}\r\n` : `${body}\r\n`;
-}
-
-function clockCell(wall: number | null): string {
-	if (wall === null) return "";
-	const date = new Date(wall);
-	const hours = String(date.getUTCHours()).padStart(2, "0");
-	const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-	return `${hours}:${minutes}`;
 }
 
 export function csvFileName(): string {

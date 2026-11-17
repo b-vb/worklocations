@@ -1,5 +1,3 @@
-export type TimelineFormat = "device";
-
 export type ParsedVisit = {
 	/** Wall-clock milliseconds (see lib/time.ts). */
 	startWall: number;
@@ -31,7 +29,7 @@ export type FrequentPlace = {
 export type FileReport = {
 	name: string;
 	bytes: number;
-	format: TimelineFormat;
+	format: "device";
 	visits: number;
 	points: number;
 	error?: string;

@@ -13,6 +13,7 @@ import {
 import type { LatLng } from "../lib/geo";
 import { useI18n } from "../lib/i18n";
 import type { PlaceSetting } from "../lib/settings";
+import type { PickTarget } from "../machines/placesMachine";
 import { tileProviderMachine } from "../machines/tileProviderMachine";
 import { Button, cn } from "./ui";
 
@@ -31,8 +32,6 @@ const TILE_PROVIDERS = [
 	"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
 	"https://tile.openstreetmap.de/{z}/{x}/{y}.png",
 ];
-
-type PickTarget = "office" | "home";
 
 type Props = {
 	office: PlaceSetting | null;
@@ -66,29 +65,32 @@ function ClickToPick({ onPick }: { onPick: (point: LatLng) => void }) {
 	return null;
 }
 
+function fitToPoints(map: L.Map, points: LatLng[]) {
+	const first = points[0];
+	const second = points[1];
+	if (!first) {
+		map.setView(FALLBACK_CENTER, 7);
+		return;
+	}
+	if (!second) {
+		map.setView([first.lat, first.lng], 15);
+		return;
+	}
+	map.fitBounds(
+		L.latLngBounds([
+			[first.lat, first.lng],
+			[second.lat, second.lng],
+		]).pad(0.45),
+		{ maxZoom: 15 },
+	);
+}
+
 function FitToPlaces({ points }: { points: LatLng[] }) {
 	const map = useMap();
-	const first = points[0] ?? null;
-	const second = points[1] ?? null;
-	const firstLat = first?.lat ?? null;
-	const firstLng = first?.lng ?? null;
-	const secondLat = second?.lat ?? null;
-	const secondLng = second?.lng ?? null;
 
 	useEffect(() => {
-		if (firstLat === null || firstLng === null) return;
-		if (secondLat === null || secondLng === null) {
-			map.setView([firstLat, firstLng], 15);
-			return;
-		}
-		map.fitBounds(
-			L.latLngBounds([
-				[firstLat, firstLng],
-				[secondLat, secondLng],
-			]).pad(0.45),
-			{ maxZoom: 15 },
-		);
-	}, [map, firstLat, firstLng, secondLat, secondLng]);
+		fitToPoints(map, points);
+	}, [map, points]);
 
 	return null;
 }

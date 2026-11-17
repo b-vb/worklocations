@@ -1,4 +1,5 @@
-import { type ParseInput, parseTimelineJson } from "./parse";
+import { parseTimelineJson } from "./parse";
+import { readFiles } from "./readFiles";
 
 type Incoming = { files: File[] };
 
@@ -23,20 +24,9 @@ const post = (message: Outgoing) => scope.postMessage(message);
 scope.onmessage = async (event) => {
 	try {
 		const files = event.data?.files ?? [];
-		const inputs: ParseInput[] = [];
-
-		for (let index = 0; index < files.length; index += 1) {
-			const file = files[index];
-			post({
-				type: "progress",
-				phase: "reading",
-				name: file.name,
-				index: index + 1,
-				total: files.length,
-			});
-			const text = await file.text();
-			inputs.push({ name: file.name, bytes: file.size, text });
-		}
+		const inputs = await readFiles(files, (progress) =>
+			post({ type: "progress", ...progress }),
+		);
 
 		post({ type: "progress", phase: "building" });
 		post({ type: "done", history: parseTimelineJson(inputs) });

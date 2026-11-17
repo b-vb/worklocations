@@ -177,11 +177,10 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 
 				{reviewCount > 0 ? (
 					<p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/25">
-						{reviewCount} day{reviewCount === 1 ? "" : "s"} still need a
-						decision.
+						{t("export.review", { count: reviewCount })}{" "}
 						{options.onlyClassified
-							? " They are left out of this file."
-							: " They are exported as Other/Unknown."}
+							? t("export.reviewExcluded")
+							: t("export.reviewIncluded")}
 					</p>
 				) : null}
 
@@ -201,7 +200,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 						<div className="flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
 							{(
 								[
-									["table", "Table"],
+									["table", t("export.table")],
 									["text", t("export.csvText")],
 								] as const
 							).map(([value, label]) => (

@@ -1,6 +1,7 @@
 import { useI18n } from "../lib/i18n";
+import type { DayRange, PeriodBounds } from "../lib/period";
 import type { AppSettings } from "../lib/settings";
-import { DAY_MS, dayKey } from "../lib/time";
+import { clampHour } from "../lib/time";
 import type { PeriodPreset } from "../machines/periodMachine";
 import {
 	Button,
@@ -14,12 +15,10 @@ import {
 	Toggle,
 } from "./ui";
 
-export type Range = { from: string; to: string };
-
 type Props = {
 	settings: AppSettings;
-	range: Range;
-	bounds: { min: string; max: string };
+	range: DayRange;
+	bounds: PeriodBounds;
 	advanced: boolean;
 	onFromChange: (value: string) => void;
 	onToChange: (value: string) => void;
@@ -296,19 +295,4 @@ export function RangeControls({
 			) : null}
 		</Card>
 	);
-}
-
-export function rangeBounds(
-	startWall: number,
-	endWall: number,
-): { min: string; max: string } {
-	return {
-		min: dayKey(startWall),
-		max: dayKey(Math.max(startWall, endWall - DAY_MS / 2)),
-	};
-}
-
-function clampHour(value: number, fallback: number): number {
-	if (!Number.isFinite(value)) return fallback;
-	return Math.min(24, Math.max(0, Math.round(value)));
 }

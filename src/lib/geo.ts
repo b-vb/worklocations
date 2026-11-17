@@ -1,4 +1,11 @@
+import { toFiniteNumber } from "./guards";
+
 export type LatLng = { lat: number; lng: number };
+
+export type PlaceSetting = LatLng & {
+	radiusMeters: number;
+	label?: string;
+};
 
 const EARTH_RADIUS_M = 6_371_008.8;
 
@@ -23,22 +30,13 @@ function isValidLatLng(lat: number, lng: number): boolean {
 	);
 }
 
-function toNumber(value: unknown): number | null {
-	if (typeof value === "number" && Number.isFinite(value)) return value;
-	if (typeof value === "string" && value.trim() !== "") {
-		const parsed = Number(value);
-		return Number.isFinite(parsed) ? parsed : null;
-	}
-	return null;
-}
-
 function parseCoordinateString(raw: string): LatLng | null {
 	const cleaned = raw.trim().replace(/^geo:/i, "").replace(/°/g, "");
 	if (cleaned === "") return null;
 	const parts = cleaned.split(",");
 	if (parts.length < 2) return null;
-	const lat = toNumber(parts[0]);
-	const lng = toNumber(parts[1]);
+	const lat = toFiniteNumber(parts[0]);
+	const lng = toFiniteNumber(parts[1]);
 	if (lat === null || lng === null) return null;
 	return isValidLatLng(lat, lng) ? { lat, lng } : null;
 }
@@ -57,8 +55,8 @@ export function parseLatLng(value: unknown): LatLng | null {
 
 	const record = value as Record<string, unknown>;
 
-	const latE7 = toNumber(record.latitudeE7 ?? record.latE7);
-	const lngE7 = toNumber(record.longitudeE7 ?? record.lngE7);
+	const latE7 = toFiniteNumber(record.latitudeE7 ?? record.latE7);
+	const lngE7 = toFiniteNumber(record.longitudeE7 ?? record.lngE7);
 	if (latE7 !== null && lngE7 !== null) {
 		const lat = latE7 / 1e7;
 		const lng = lngE7 / 1e7;
@@ -72,8 +70,8 @@ export function parseLatLng(value: unknown): LatLng | null {
 		if (parsed) return parsed;
 	}
 
-	const lat = toNumber(record.lat ?? record.latitude);
-	const lng = toNumber(record.lng ?? record.lon ?? record.longitude);
+	const lat = toFiniteNumber(record.lat ?? record.latitude);
+	const lng = toFiniteNumber(record.lng ?? record.lon ?? record.longitude);
 	if (lat !== null && lng !== null) {
 		return isValidLatLng(lat, lng) ? { lat, lng } : null;
 	}

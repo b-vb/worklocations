@@ -1,9 +1,9 @@
-import { type ParseInput, parseTimelineJson } from "./parse";
+import { parseTimelineJson } from "./parse";
+import type { ParseProgress } from "./progress";
+import { readFiles } from "./readFiles";
 import type { ParsedHistory } from "./types";
 
-export type ParseProgress =
-	| { phase: "reading"; name: string; index: number; total: number }
-	| { phase: "building" };
+export type { ParseProgress };
 
 type WorkerMessage =
 	| ({ type: "progress" } & ParseProgress)
@@ -16,30 +16,14 @@ function abortError(): Error {
 	return error;
 }
 
-function throwIfAborted(signal?: AbortSignal): void {
-	if (signal?.aborted) throw abortError();
-}
-
 async function parseInline(
 	files: File[],
 	onProgress?: (progress: ParseProgress) => void,
 	signal?: AbortSignal,
 ): Promise<ParsedHistory> {
-	const inputs: ParseInput[] = [];
-	for (let index = 0; index < files.length; index += 1) {
-		throwIfAborted(signal);
-		const file = files[index];
-		onProgress?.({
-			phase: "reading",
-			name: file.name,
-			index: index + 1,
-			total: files.length,
-		});
-		inputs.push({ name: file.name, bytes: file.size, text: await file.text() });
-	}
-	throwIfAborted(signal);
+	const inputs = await readFiles(files, onProgress, signal);
 	onProgress?.({ phase: "building" });
-	throwIfAborted(signal);
+	if (signal?.aborted) throw abortError();
 	return parseTimelineJson(inputs);
 }
 
@@ -63,17 +47,19 @@ export function parseTimelineFiles(
 	return new Promise((resolve, reject) => {
 		let worker: Worker;
 		let settled = false;
-		const cleanup = () => {
-			settled = true;
-			signal?.removeEventListener("abort", onAbort);
-			worker.terminate();
-		};
-		const finish = () => cleanup();
 
 		const onAbort = () => {
 			if (settled) return;
-			cleanup();
+			settled = true;
+			worker.terminate();
 			reject(abortError());
+		};
+
+		const finish = () => {
+			if (settled) return;
+			settled = true;
+			signal?.removeEventListener("abort", onAbort);
+			worker.terminate();
 		};
 
 		try {

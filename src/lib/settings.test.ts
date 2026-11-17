@@ -107,6 +107,24 @@ describe("settings storage", () => {
 		expect(loaded.csv.includeMinutes).toBe(false);
 	});
 
+	it("keeps v1 CSV customisations when other columns were changed", () => {
+		store.set(
+			"afas-commute-log.settings.v1",
+			JSON.stringify({
+				csv: {
+					...defaultCsvOptions,
+					includeDay: true,
+					includeMinutes: true,
+					delimiter: ",",
+				},
+			}),
+		);
+		const loaded = loadSettings();
+		expect(loaded.csv.delimiter).toBe(",");
+		expect(loaded.csv.includeDay).toBe(true);
+		expect(loaded.csv.includeMinutes).toBe(true);
+	});
+
 	it("keeps CSV customisations saved by the current version", () => {
 		store.set(
 			"worklocations.settings.v1",
