@@ -101,7 +101,7 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 				}
 			/>
 
-			<div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+			<div className="flex flex-wrap items-center gap-1.5 border-b-2 border-ink/8 px-5 py-3 dark:border-white/10">
 				{(
 					[
 						["review", t("days.filterReview", { count: reviewCount })],
@@ -133,8 +133,8 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 
 			<div className="max-h-[640px] overflow-auto">
 				<table className="w-full border-collapse text-sm">
-					<thead className="sticky top-0 z-10 bg-white/95 backdrop-blur dark:bg-slate-900/95">
-						<tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400">
+					<thead className="sticky top-0 z-10 bg-paper/95 backdrop-blur dark:bg-night-card/95">
+						<tr className="border-b-2 border-ink/10 text-left text-[11px] font-black uppercase tracking-wider text-ink/50 dark:border-white/10 dark:text-white/50">
 							<th className="w-32 px-4 py-2 font-medium">{t("days.date")}</th>
 							<th className="px-2 py-2 font-medium">{t("days.timeline")}</th>
 							<th className="w-24 px-2 py-2 font-medium">{t("days.office")}</th>
@@ -162,17 +162,17 @@ export function DayTable({ rows, onOverride, onResetOverrides }: Props) {
 				</table>
 			</div>
 
-			<div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+			<div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-2 border-ink/8 px-5 py-3 text-xs font-medium text-ink/50 dark:border-white/10 dark:text-white/50">
 				<span className="inline-flex items-center gap-1.5">
-					<span className="size-2 rounded-full bg-indigo-500" />{" "}
+					<span className="size-2 rounded-full bg-sky" />{" "}
 					{t("days.legendOffice")}
 				</span>
 				<span className="inline-flex items-center gap-1.5">
-					<span className="size-2 rounded-full bg-emerald-500" />{" "}
+					<span className="size-2 rounded-full bg-mint" />{" "}
 					{t("days.legendHome")}
 				</span>
 				<span className="inline-flex items-center gap-1.5">
-					<span className="size-2 rounded-full bg-amber-400" />{" "}
+					<span className="size-2 rounded-full bg-sun" />{" "}
 					{t("days.legendOther")}
 				</span>
 				<span className="ml-auto">{t("days.hiddenHint")}</span>
@@ -195,8 +195,8 @@ function DayLine({
 	return (
 		<tr
 			className={cn(
-				"border-b border-slate-100 last:border-0 dark:border-slate-800/80",
-				row.needsReview && "bg-amber-50/60 dark:bg-amber-500/5",
+				"border-b border-ink/8 last:border-0 dark:border-white/8",
+				row.needsReview && "bg-sun/20 dark:bg-sun/10",
 				!row.included && "opacity-50",
 			)}
 		>
@@ -207,17 +207,14 @@ function DayLine({
 				<div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
 					{formatWeekday(row.weekday)}
 					{row.holiday ? (
-						<span
-							className="truncate text-rose-600 dark:text-rose-400"
-							title={holiday(row.holiday)}
-						>
+						<span className="truncate text-coral" title={holiday(row.holiday)}>
 							· {holiday(row.holiday)}
 						</span>
 					) : null}
 				</div>
 			</td>
 			<td className="px-2 py-2.5">
-				<div className="relative h-5 w-full min-w-40 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
+				<div className="relative h-5 w-full min-w-40 overflow-hidden rounded-full bg-ink/10 dark:bg-white/10">
 					{row.slices.map((slice) => (
 						<div
 							key={`${slice.start}-${slice.label}`}
@@ -236,7 +233,7 @@ function DayLine({
 					{[6, 12, 18].map((hour) => (
 						<div
 							key={hour}
-							className="absolute inset-y-0 w-px bg-white/60 dark:bg-slate-900/60"
+							className="absolute inset-y-0 w-px bg-white/70 dark:bg-night-card/70"
 							style={{ left: `${(hour / 24) * 100}%` }}
 						/>
 					))}

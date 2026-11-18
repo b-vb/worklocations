@@ -7,7 +7,7 @@ export function LocaleSwitcher() {
 	const { locale, setLocale, t } = useI18n();
 
 	return (
-		<fieldset className="m-0 flex min-w-0 rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+		<fieldset className="m-0 flex min-w-0 rounded-full border-2 border-ink/15 bg-white/70 p-0.5 dark:border-white/15 dark:bg-white/5">
 			<legend className="sr-only">{t("app.language")}</legend>
 			{LOCALES.map((code) => (
 				<button
@@ -16,10 +16,10 @@ export function LocaleSwitcher() {
 					onClick={() => setLocale(code)}
 					aria-pressed={locale === code}
 					className={cn(
-						"rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors",
+						"rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide transition-colors",
 						locale === code
-							? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-							: "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
+							? "bg-coral text-white dark:bg-white dark:text-night"
+							: "text-ink/55 hover:bg-sun/30 dark:text-white/60 dark:hover:bg-white/10",
 					)}
 				>
 					{code}

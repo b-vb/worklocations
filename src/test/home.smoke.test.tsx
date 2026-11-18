@@ -42,7 +42,7 @@ beforeEach(async () => {
 
 it("renders the intro and boots through the import actor", async () => {
 	const { container } = render(<Home />);
-	expect(screen.getByText("Zo werkt het")).toBeTruthy();
+	expect(screen.getByText("Drie stappen, klaar")).toBeTruthy();
 	expect(screen.getByText("Open je Google Tijdlijn-export")).toBeTruthy();
 
 	const input = container.querySelector(
@@ -70,7 +70,7 @@ it("renders the intro and boots through the import actor", async () => {
 
 	await waitFor(
 		() => {
-			expect(screen.getByText("Welke periode?")).toBeTruthy();
+			expect(screen.getByText("Welke maanden?")).toBeTruthy();
 		},
 		{ timeout: 4000 },
 	);
@@ -94,7 +94,7 @@ it("skips the place picker when an office is already saved", async () => {
 
 	await waitFor(
 		() => {
-			expect(screen.getByText("Welke periode?")).toBeTruthy();
+			expect(screen.getByText("Welke maanden?")).toBeTruthy();
 		},
 		{ timeout: 4000 },
 	);

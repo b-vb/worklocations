@@ -132,13 +132,13 @@ export function PlaceMap({
 			: FALLBACK_CENTER;
 
 	return (
-		<div className="relative isolate z-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-			<div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
+		<div className="relative isolate z-0 overflow-hidden rounded-[26px] border-2 border-ink/10 dark:border-white/10">
+			<div className="flex flex-wrap items-center justify-between gap-2 bg-sun/20 px-3 py-2 dark:bg-white/5">
 				<div className="flex items-center gap-2">
-					<span className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+					<span className="text-[11px] font-medium uppercase tracking-wide text-ink/50 dark:text-white/50">
 						{t("map.clickToSet")}
 					</span>
-					<div className="flex rounded-md border border-slate-200 p-0.5 dark:border-slate-700">
+					<div className="flex rounded-full border-2 border-ink/10 p-0.5 dark:border-white/10">
 						{(
 							[
 								["office", t("map.office")],
@@ -153,9 +153,9 @@ export function PlaceMap({
 									"rounded px-2 py-0.5 text-[11px] font-medium transition-colors",
 									pickTarget === value
 										? value === "office"
-											? "bg-indigo-600 text-white"
-											: "bg-emerald-600 text-white"
-										: "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700",
+											? "bg-sky text-ink"
+											: "bg-mint text-ink"
+										: "text-ink/60 hover:bg-white/70 dark:text-white/60 dark:hover:bg-white/10",
 								)}
 								aria-pressed={pickTarget === value}
 							>
@@ -165,7 +165,7 @@ export function PlaceMap({
 					</div>
 				</div>
 				<div className="flex items-center gap-2">
-					<span className="hidden text-[11px] text-slate-400 dark:text-slate-500 sm:inline">
+					<span className="hidden text-[11px] text-ink/35 dark:text-white/35 sm:inline">
 						{t("map.dragHint")}
 					</span>
 					<Button
@@ -267,7 +267,7 @@ export function PlaceMap({
 				</MapContainer>
 
 				{tilesFailed ? (
-					<div className="pointer-events-none absolute inset-x-3 bottom-8 z-[500] rounded-lg bg-amber-50/95 px-3 py-2 text-[11px] text-amber-800 shadow ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30">
+					<div className="pointer-events-none absolute inset-x-3 bottom-8 z-[500] rounded-lg bg-sun/90 px-3 py-2 text-[11px] font-semibold text-ink shadow ring-1 ring-sun dark:bg-sun/20 dark:text-white dark:ring-sun/30">
 						{t("map.tilesFailed")}
 					</div>
 				) : null}

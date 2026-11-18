@@ -37,24 +37,29 @@ export type Tone =
 	| "info";
 
 const TONE_CLASSES: Record<Tone, string> = {
-	office:
-		"bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/25",
-	home: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/25",
-	other:
-		"bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/25",
-	pto: "bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:ring-violet-500/25",
-	muted:
-		"bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
-	warn: "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/25",
-	ok: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/25",
-	info: "bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/25",
+	office: "bg-sky/45 text-ink",
+	home: "bg-mint/55 text-ink",
+	other: "bg-sun/70 text-ink",
+	pto: "bg-lilac/60 text-ink",
+	muted: "bg-ink/10 text-ink/65",
+	warn: "bg-coral/20 text-coral",
+	ok: "bg-mint/55 text-ink",
+	info: "bg-sky/40 text-ink",
 };
 
 export const SLICE_CLASSES: Record<"office" | "home" | "other", string> = {
-	office: "bg-indigo-500 dark:bg-indigo-400",
-	home: "bg-emerald-500 dark:bg-emerald-400",
-	other: "bg-amber-400 dark:bg-amber-300",
+	office: "bg-sky",
+	home: "bg-mint",
+	other: "bg-sun",
 };
+
+const STEP_STYLES = [
+	"bg-coral text-white",
+	"bg-sun text-ink",
+	"bg-mint text-ink",
+	"bg-sky text-ink",
+	"bg-lilac text-ink",
+];
 
 export function Card({
 	children,
@@ -66,7 +71,7 @@ export function Card({
 	return (
 		<section
 			className={cn(
-				"rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900",
+				"rounded-[26px] border-2 border-ink/10 bg-white/90 shadow-[0_5px_0_rgba(34,48,57,0.08)] backdrop-blur-sm dark:border-white/10 dark:bg-night-card/95 dark:shadow-[0_5px_0_rgba(0,0,0,0.35)]",
 				className,
 			)}
 		>
@@ -86,20 +91,29 @@ export function SectionHeader({
 	description?: ReactNode;
 	action?: ReactNode;
 }) {
+	const stepStyle = step
+		? STEP_STYLES[(Number(step) - 1) % STEP_STYLES.length]
+		: "";
+
 	return (
-		<div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+		<div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-ink/8 px-5 py-4 dark:border-white/10">
 			<div className="flex items-start gap-3">
 				{step ? (
-					<span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-white dark:text-slate-900">
+					<span
+						className={cn(
+							"mt-0.5 flex size-8 shrink-0 -rotate-3 items-center justify-center rounded-xl border-2 border-ink/15 text-sm font-black shadow-[0_2px_0_rgba(34,48,57,0.15)]",
+							stepStyle,
+						)}
+					>
 						{step}
 					</span>
 				) : null}
 				<div>
-					<h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+					<h2 className="text-lg font-extrabold tracking-tight text-ink dark:text-white">
 						{title}
 					</h2>
 					{description ? (
-						<p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
+						<p className="mt-1 max-w-2xl text-sm font-medium text-ink/60 dark:text-white/60">
 							{description}
 						</p>
 					) : null}
@@ -123,20 +137,20 @@ export function Button({
 }: ButtonProps) {
 	const variants = {
 		primary:
-			"bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-400 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 dark:disabled:bg-slate-600",
+			"border-2 border-ink/15 bg-coral font-black text-white shadow-[0_3px_0_#c94a4a] hover:bg-[#ff5a5a] active:translate-y-0.5 active:shadow-[0_1px_0_#c94a4a] disabled:bg-coral/40 disabled:text-white/70",
 		secondary:
-			"border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
+			"border-2 border-ink/15 bg-white font-bold text-ink shadow-[0_3px_0_rgba(34,48,57,0.12)] hover:bg-sun/25 active:translate-y-0.5 active:shadow-none dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
 		ghost:
-			"text-slate-600 hover:bg-slate-100 disabled:text-slate-400 dark:text-slate-300 dark:hover:bg-slate-800",
+			"border-2 border-transparent font-bold text-ink/65 hover:bg-sun/30 hover:text-ink dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white",
 		danger:
-			"border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
+			"border-2 border-coral/30 bg-coral/10 font-bold text-coral hover:bg-coral/20",
 	};
 	return (
 		<button
 			type="button"
 			className={cn(
-				"inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed dark:focus-visible:outline-white",
-				size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-3.5 py-2 text-sm",
+				"inline-flex items-center justify-center gap-1.5 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral disabled:cursor-not-allowed",
+				size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm",
 				variants[variant],
 				className,
 			)}
@@ -157,7 +171,7 @@ export function Badge({
 	return (
 		<span
 			className={cn(
-				"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset",
+				"inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold",
 				TONE_CLASSES[tone],
 				className,
 			)}
@@ -178,31 +192,46 @@ export function Stat({
 	hint?: string;
 	tone?: Tone;
 }) {
-	const accents: Record<Tone, string> = {
-		office: "text-indigo-600 dark:text-indigo-400",
-		home: "text-emerald-600 dark:text-emerald-400",
-		other: "text-amber-600 dark:text-amber-400",
-		pto: "text-violet-600 dark:text-violet-400",
-		muted: "text-slate-900 dark:text-slate-100",
-		warn: "text-rose-600 dark:text-rose-400",
-		ok: "text-emerald-600 dark:text-emerald-400",
-		info: "text-sky-600 dark:text-sky-400",
+	const cardTones: Record<Tone, string> = {
+		office: "bg-sky/20 border-sky/50",
+		home: "bg-mint/25 border-mint/60",
+		other: "bg-sun/30 border-sun/60",
+		pto: "bg-lilac/25 border-lilac/60",
+		muted: "bg-white/70 border-ink/10 dark:bg-white/5 dark:border-white/10",
+		warn: "bg-coral/10 border-coral/30",
+		ok: "bg-mint/25 border-mint/60",
+		info: "bg-sky/20 border-sky/50",
+	};
+	const valueTones: Record<Tone, string> = {
+		office: "text-ink dark:text-white",
+		home: "text-ink dark:text-white",
+		other: "text-ink dark:text-white",
+		pto: "text-ink dark:text-white",
+		muted: "text-ink dark:text-white",
+		warn: "text-coral",
+		ok: "text-ink dark:text-white",
+		info: "text-ink dark:text-white",
 	};
 	return (
-		<div className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
-			<div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+		<div
+			className={cn(
+				"rounded-2xl border-2 px-4 py-3 shadow-[0_3px_0_rgba(34,48,57,0.06)]",
+				cardTones[tone],
+			)}
+		>
+			<div className="text-[11px] font-black uppercase tracking-wider text-ink/50 dark:text-white/50">
 				{label}
 			</div>
 			<div
 				className={cn(
-					"mt-1 text-2xl font-semibold tabular-nums",
-					accents[tone],
+					"mt-1 text-3xl font-black tabular-nums",
+					valueTones[tone],
 				)}
 			>
 				{value}
 			</div>
 			{hint ? (
-				<div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+				<div className="mt-0.5 text-xs font-medium text-ink/50 dark:text-white/50">
 					{hint}
 				</div>
 			) : null}
@@ -223,12 +252,12 @@ export function Field({
 }) {
 	return (
 		<div className={cn("block", className)}>
-			<span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+			<span className="text-xs font-bold text-ink/65 dark:text-white/65">
 				{label}
 			</span>
 			<div className="mt-1.5">{children}</div>
 			{hint ? (
-				<span className="mt-1.5 block text-xs text-slate-500 dark:text-slate-400">
+				<span className="mt-1.5 block text-xs font-medium text-ink/45 dark:text-white/45">
 					{hint}
 				</span>
 			) : null}
@@ -243,7 +272,7 @@ export function TextInput({
 	return (
 		<input
 			className={cn(
-				"w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-500 dark:focus:ring-white/10",
+				"w-full rounded-xl border-2 border-ink/15 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-ink shadow-[0_2px_0_rgba(34,48,57,0.06)] outline-none transition placeholder:font-normal placeholder:text-ink/35 focus:border-coral focus:ring-4 focus:ring-coral/15 dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30 dark:focus:border-coral",
 				className,
 			)}
 			{...props}
@@ -259,7 +288,7 @@ export function Select({
 	return (
 		<select
 			className={cn(
-				"rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-white/10",
+				"rounded-xl border-2 border-ink/15 bg-white/80 px-2.5 py-1.5 text-sm font-semibold text-ink outline-none focus:border-coral focus:ring-4 focus:ring-coral/15 dark:border-white/15 dark:bg-white/5 dark:text-white",
 				className,
 			)}
 			{...props}
@@ -286,14 +315,14 @@ export function Toggle({
 				type="checkbox"
 				checked={checked}
 				onChange={(event) => onChange(event.target.checked)}
-				className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-slate-900 accent-slate-900 dark:border-slate-600 dark:accent-white"
+				className="mt-0.5 size-4 shrink-0 rounded border-ink/30 accent-coral dark:border-white/30"
 			/>
 			<span>
-				<span className="font-medium text-slate-700 dark:text-slate-200">
+				<span className="font-bold text-ink/80 dark:text-white/80">
 					{label}
 				</span>
 				{hint ? (
-					<span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+					<span className="mt-0.5 block text-xs font-medium text-ink/45 dark:text-white/45">
 						{hint}
 					</span>
 				) : null}

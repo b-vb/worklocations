@@ -344,7 +344,7 @@ describe("holidays", () => {
 });
 
 describe("rowsToCsv", () => {
-	it("writes Dutch AFAS-friendly CSV with a BOM", () => {
+	it("writes a Dutch CSV with a BOM", () => {
 		const rows = buildDayRows(
 			history([
 				visit("2026-05-04", 9, 17, OFFICE, "WORK"),

@@ -133,7 +133,7 @@ export function RangeControls({
 				</div>
 
 				{advanced ? (
-					<div className="grid gap-6 border-t border-slate-100 pt-5 md:grid-cols-2 dark:border-slate-800">
+					<div className="grid gap-6 border-t-2 border-ink/8 pt-5 md:grid-cols-2 dark:border-white/10">
 						<div>
 							<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
 								{t("period.workingDays")}
@@ -149,8 +149,8 @@ export function RangeControls({
 										className={cn(
 											"size-9 rounded-lg text-sm font-medium transition-colors",
 											settings.workdays[weekday]
-												? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-												: "border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800",
+												? "bg-coral text-white shadow-[0_2px_0_#c94a4a]"
+												: "border-2 border-ink/12 text-ink/55 hover:bg-sun/25 dark:border-white/10 dark:text-white/55 dark:hover:bg-white/10",
 										)}
 										aria-pressed={settings.workdays[weekday]}
 									>
@@ -265,7 +265,7 @@ export function RangeControls({
 						</div>
 					</div>
 				) : (
-					<p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+					<p className="rounded-lg bg-sun/20 px-3 py-2 text-xs font-medium text-ink/65 dark:bg-white/5 dark:text-white/60">
 						{summaryWorkdays()} ·{" "}
 						{String(settings.windowStartHour).padStart(2, "0")}:00–
 						{String(settings.windowEndHour).padStart(2, "0")}:00 ·{" "}
@@ -284,7 +284,7 @@ export function RangeControls({
 			</div>
 
 			{onContinue ? (
-				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/8 px-5 py-3 dark:border-white/10">
 					<p className="text-xs text-slate-500 dark:text-slate-400">
 						{t("period.nextHint")}
 					</p>

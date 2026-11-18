@@ -8,7 +8,7 @@ import { LocaleSwitcher } from "./components/LocaleSwitcher";
 import { PlaceSetup } from "./components/PlaceSetup";
 import { RangeControls } from "./components/RangeControls";
 import { Summary } from "./components/Summary";
-import { Badge, Button, Card, SectionHeader } from "./components/ui";
+import { Badge, Button, Card, cn, SectionHeader } from "./components/ui";
 import { holidaysInRange } from "./lib/holidays";
 import { useI18n } from "./lib/i18n";
 import { type DayRange, rangeBounds } from "./lib/period";
@@ -155,34 +155,35 @@ export function Home() {
 	};
 
 	return (
-		<div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-			<header className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
+		<div className="min-h-screen text-ink dark:text-white">
+			<header className="border-b-2 border-ink/10 bg-paper/75 backdrop-blur-md dark:border-white/10 dark:bg-night/70">
 				<div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
 					<div className="flex items-center gap-3">
-						<div className="flex size-9 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+						<div className="flex size-11 -rotate-3 items-center justify-center rounded-2xl border-2 border-ink/15 bg-coral text-white shadow-[0_4px_0_#c94a4a]">
 							<svg
 								aria-hidden="true"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
-								strokeWidth="1.8"
-								className="size-5"
+								strokeWidth="2"
+								className="size-6"
 							>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"
-									d="M4 19V9m4 10V5m4 14v-7m4 7V8m4 11v-4"
+									d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z"
 								/>
+								<circle cx="12" cy="10" r="2.4" />
 							</svg>
 						</div>
-						<h1 className="text-base font-semibold tracking-tight">
+						<h1 className="text-xl font-black tracking-tight sm:text-2xl">
 							{t("app.title")}
 						</h1>
 					</div>
 					<div className="flex items-center gap-2">
 						<LocaleSwitcher />
 						<Badge tone="ok">
-							<span className="size-1.5 rounded-full bg-emerald-500" />
+							<span className="size-1.5 rounded-full bg-mint" />
 							{t("app.noUploads")}
 						</Badge>
 						{history ? (
@@ -202,34 +203,49 @@ export function Home() {
 				{!history ? (
 					<>
 						<div>
-							<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+							<h2 className="text-3xl font-black tracking-tight">
 								{t("intro.title")}
 							</h2>
-							<p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+							<p className="mt-1 text-sm font-medium text-ink/55 dark:text-white/55">
 								{t("intro.subtitle")}
 							</p>
 						</div>
 						<div className="grid gap-4 sm:grid-cols-3">
 							{[
 								{
+									emoji: "🗂️",
 									title: t("intro.step1.title"),
 									body: t("intro.step1.body"),
+									className: "bg-sun/45 -rotate-1",
 								},
 								{
+									emoji: "📍",
 									title: t("intro.step2.title"),
 									body: t("intro.step2.body"),
+									className: "bg-mint/45 rotate-[0.7deg]",
 								},
 								{
+									emoji: "🎉",
 									title: t("intro.step3.title"),
 									body: t("intro.step3.body"),
+									className: "bg-sky/45 -rotate-[0.5deg]",
 								},
 							].map((item) => (
-								<Card key={item.title} className="p-4">
-									<p className="text-sm font-semibold">{item.title}</p>
-									<p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+								<div
+									key={item.title}
+									className={cn(
+										"rounded-[26px] border-2 border-ink/10 p-5 shadow-[0_5px_0_rgba(34,48,57,0.08)] transition-transform hover:rotate-0 hover:-translate-y-0.5",
+										item.className,
+									)}
+								>
+									<span className="text-3xl" aria-hidden="true">
+										{item.emoji}
+									</span>
+									<p className="mt-2 text-base font-extrabold">{item.title}</p>
+									<p className="mt-1 text-xs font-medium leading-relaxed text-ink/60 dark:text-white/60">
 										{item.body}
 									</p>
-								</Card>
+								</div>
 							))}
 						</div>
 						<DropZone
@@ -396,7 +412,7 @@ export function Home() {
 									<h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
 										{t("result.title")}
 									</h2>
-									<span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+									<span className="h-0.5 flex-1 rounded-full bg-ink/10 dark:bg-white/10" />
 								</div>
 
 								<Summary rows={rows} summary={summary} />

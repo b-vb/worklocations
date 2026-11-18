@@ -14,27 +14,27 @@ export function Summary({ rows, summary }: Props) {
 		{
 			label: t("status.office"),
 			value: summary.office,
-			className: "bg-indigo-500 dark:bg-indigo-400",
+			className: "bg-sky",
 		},
 		{
 			label: t("status.home"),
 			value: summary.home,
-			className: "bg-emerald-500 dark:bg-emerald-400",
+			className: "bg-mint",
 		},
 		{
 			label: t("status.other"),
 			value: summary.other,
-			className: "bg-amber-400 dark:bg-amber-300",
+			className: "bg-sun",
 		},
 		{
 			label: t("status.pto"),
 			value: summary.pto,
-			className: "bg-violet-500 dark:bg-violet-400",
+			className: "bg-lilac",
 		},
 		{
 			label: t("status.no-data"),
 			value: summary.noData,
-			className: "bg-slate-300 dark:bg-slate-700",
+			className: "bg-ink/20 dark:bg-white/15",
 		},
 	];
 
@@ -83,7 +83,7 @@ export function Summary({ rows, summary }: Props) {
 			</div>
 
 			<div className="mt-5">
-				<div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+				<div className="flex h-2.5 w-full overflow-hidden rounded-full bg-ink/10 dark:bg-white/10">
 					{segments.map((segment) =>
 						segment.value > 0 ? (
 							<div

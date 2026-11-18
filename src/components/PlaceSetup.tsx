@@ -128,7 +128,7 @@ export function PlaceSetup({
 				/>
 
 				<div className="grid gap-3 p-5 md:grid-cols-2">
-					<div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+					<div className="rounded-2xl border-2 border-sky/40 bg-sky/10 p-3 dark:border-sky/20 dark:bg-sky/5">
 						<div className="flex items-center justify-between gap-2">
 							<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
 								{t("places.office")}
@@ -189,7 +189,7 @@ export function PlaceSetup({
 						)}
 					</div>
 
-					<div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+					<div className="rounded-2xl border-2 border-mint/50 bg-mint/10 p-3 dark:border-mint/20 dark:bg-mint/5">
 						<div className="flex items-center justify-between gap-2">
 							<span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
 								{t("places.home")}
@@ -251,7 +251,7 @@ export function PlaceSetup({
 					</div>
 				</div>
 
-				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/8 px-5 py-3 dark:border-white/10">
 					<p className="text-xs text-slate-500 dark:text-slate-400">
 						{office ? t("places.footerSaved") : t("places.footerNeeded")}
 					</p>
@@ -357,7 +357,7 @@ export function PlaceSetup({
 					) : null}
 
 					{results.length > 0 ? (
-						<ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
+						<ul className="divide-y divide-ink/8 overflow-hidden rounded-2xl border-2 border-ink/10 dark:divide-white/10 dark:border-white/10">
 							{results.map((result) => (
 								<li key={`${result.label}-${result.lat}-${result.lng}`}>
 									<button
@@ -365,7 +365,7 @@ export function PlaceSetup({
 										onClick={() =>
 											applyOffice(result.lat, result.lng, result.label)
 										}
-										className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+										className="w-full px-3 py-2 text-left text-sm font-medium hover:bg-sun/20 dark:hover:bg-white/5"
 									>
 										<span className="block font-medium text-slate-800 dark:text-slate-100">
 											{result.label}
@@ -404,13 +404,13 @@ export function PlaceSetup({
 					) : null}
 
 					{office ? (
-						<div className="rounded-xl bg-indigo-50/70 p-3 ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
+						<div className="rounded-2xl border-2 border-sky/40 bg-sky/15 p-3 dark:border-sky/20 dark:bg-sky/10">
 							<div className="flex items-center justify-between gap-2">
 								<div>
-									<p className="text-sm font-medium text-indigo-900 dark:text-indigo-200">
+									<p className="text-sm font-extrabold text-ink dark:text-white">
 										{office.label || t("places.office")}
 									</p>
-									<p className="font-mono text-[11px] text-indigo-700/70 dark:text-indigo-300/70">
+									<p className="font-mono text-[11px] text-ink/50 dark:text-white/50">
 										{formatLatLng(office)}
 									</p>
 								</div>
@@ -424,7 +424,7 @@ export function PlaceSetup({
 							/>
 						</div>
 					) : (
-						<div className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-700">
+						<div className="rounded-2xl border-2 border-dashed border-ink/20 p-3 dark:border-white/15">
 							{suggestedWork ? (
 								<Button
 									size="sm"
@@ -448,13 +448,13 @@ export function PlaceSetup({
 						</div>
 					)}
 
-					<div className="rounded-xl bg-emerald-50/60 p-3 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/20">
+					<div className="rounded-2xl border-2 border-mint/50 bg-mint/15 p-3 dark:border-mint/20 dark:bg-mint/10">
 						<div className="flex items-center justify-between gap-2">
 							<div>
-								<p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
+								<p className="text-sm font-extrabold text-ink dark:text-white">
 									{home?.label ?? t("places.homeAuto")}
 								</p>
-								<p className="text-[11px] text-emerald-800/70 dark:text-emerald-300/70">
+								<p className="text-[11px] text-ink/50 dark:text-white/50">
 									{home ? formatLatLng(home) : t("places.homeAutoHint")}
 								</p>
 							</div>
@@ -515,7 +515,7 @@ export function PlaceSetup({
 							return (
 								<li
 									key={`${place.lat}-${place.lng}`}
-									className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"
+									className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-ink/8 px-3 py-2 dark:border-white/10"
 								>
 									<div className="min-w-0">
 										<p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
@@ -575,7 +575,7 @@ export function PlaceSetup({
 							);
 						})}
 						{clusters.length === 0 ? (
-							<li className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+							<li className="rounded-xl border-2 border-dashed border-ink/20 px-3 py-4 text-xs font-medium text-ink/50 dark:border-white/15 dark:text-white/50">
 								{t("places.noPlaces")}
 							</li>
 						) : null}
@@ -583,7 +583,7 @@ export function PlaceSetup({
 				</div>
 			</div>
 
-			<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+			<div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/8 px-5 py-3 dark:border-white/10">
 				<p className="text-xs text-slate-500 dark:text-slate-400">
 					{office ? t("places.footerSaved") : t("places.footerNeeded")}
 				</p>
@@ -626,7 +626,7 @@ function RadiusSlider({
 				step={10}
 				value={radius}
 				onChange={(event) => onChange(Number(event.target.value))}
-				className="mt-1 w-full accent-slate-900 dark:accent-white"
+				className="mt-1 w-full accent-coral"
 			/>
 		</label>
 	);

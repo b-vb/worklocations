@@ -2,9 +2,9 @@
 
 **Waar heb ik gewerkt?**
 
-Your Google Maps Timeline knows where you were. AFAS wants to know whether you
-were at the office or at home. This app connects the two: drop in your timeline,
-check the days, download a CSV. Everything happens in your browser.
+Your Google Maps Timeline knows where you were. This app turns it into a tidy
+CSV of office and home days — drop in your timeline, check the days, download.
+Everything happens in your browser.
 
 No accounts, no server, no uploading your location history.
 
@@ -38,10 +38,10 @@ will not freeze the tab. Old Google Takeout files are not supported.
    as **Verlof/PTO** when you were off. Changes are saved per day.
 5. **Download.** Filename: `werkplekken-2026-11-17.csv`.
 
-The default AFAS file contains `Datum;Locatie;Opmerking` and only office/home
-days. Turn off **Only office/home rows** in the export options to include
-Verlof/PTO and unknown days as well. Weekday, minutes, first/last seen and
-evidence are optional columns.
+The default CSV contains `Datum;Locatie;Opmerking` and only office/home days.
+Turn off **Only office/home rows** in the export options to include Verlof/PTO
+and unknown days as well. Weekday, minutes, first/last seen and evidence are
+optional columns.
 
 Dutch and English are both available from the header; the app follows your
 browser language on first visit.

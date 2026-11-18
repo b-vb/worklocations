@@ -2,8 +2,17 @@
 
 @theme {
 	--font-sans:
-		ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-		sans-serif;
+		ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Nunito,
+		"Segoe UI", system-ui, sans-serif;
+	--color-paper: #fff8ec;
+	--color-ink: #223039;
+	--color-coral: #ff6b6b;
+	--color-sun: #ffd166;
+	--color-mint: #8fe3c0;
+	--color-sky: #8fd3f4;
+	--color-lilac: #c9b6ff;
+	--color-night: #16232b;
+	--color-night-card: #1e2e37;
 }
 
 * {
@@ -23,7 +32,25 @@ body,
 body {
 	margin: 0;
 	font-family: var(--font-sans);
+	background-color: var(--color-paper);
+	color: var(--color-ink);
+	background-image: radial-gradient(
+		rgba(34, 48, 57, 0.09) 1px,
+		transparent 1px
+	);
+	background-size: 20px 20px;
 	-webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: var(--color-night);
+		color: #f4f1ea;
+		background-image: radial-gradient(
+			rgba(255, 255, 255, 0.055) 1px,
+			transparent 1px
+		);
+	}
 }
 
 /* Native date inputs look cramped otherwise. */
@@ -47,8 +74,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 		background: #0f172a;
 	}
 
-	/* OpenStreetMap has no dark tiles, so invert the tile pane only. Pins and
-	   radius circles live in other panes and keep their real colours. */
 	.leaflet-tile-pane {
 		filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.92);
 	}

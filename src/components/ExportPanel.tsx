@@ -121,7 +121,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 						</div>
 
 						<div className="grid gap-4 md:grid-cols-2">
-							<div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+							<div className="space-y-3 rounded-2xl border-2 border-ink/10 p-3 dark:border-white/10">
 								<Toggle
 									checked={options.onlyClassified}
 									onChange={(onlyClassified) => onChange({ onlyClassified })}
@@ -170,13 +170,13 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 						</div>
 					</>
 				) : (
-					<p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+					<p className="rounded-lg bg-sun/15 px-3 py-2 text-xs font-medium text-ink/60 dark:bg-white/5 dark:text-white/60">
 						{optionsSummary}
 					</p>
 				)}
 
 				{reviewCount > 0 ? (
-					<p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/25">
+					<p className="rounded-lg bg-sun/30 px-3 py-2 text-xs font-semibold text-ink ring-1 ring-sun/60 dark:bg-sun/10 dark:text-white dark:ring-sun/30">
 						{t("export.review", { count: reviewCount })}{" "}
 						{options.onlyClassified
 							? t("export.reviewExcluded")
@@ -197,7 +197,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 									: ""}
 							</p>
 						</div>
-						<div className="flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+						<div className="flex rounded-lg border-2 border-ink/10 p-0.5 dark:border-white/15">
 							{(
 								[
 									["table", t("export.table")],
@@ -212,7 +212,7 @@ export function ExportPanel({ rows, options, onChange }: Props) {
 									className={cn(
 										"rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
 										view === value
-											? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+											? "bg-coral text-white dark:bg-white dark:text-night"
 											: "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
 									)}
 								>
@@ -289,7 +289,7 @@ function PreviewTable({
 	const { t } = useI18n();
 	if (count === 0) {
 		return (
-			<div className="rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center dark:border-slate-700">
+			<div className="rounded-2xl border-2 border-dashed border-ink/20 px-6 py-10 text-center dark:border-white/15">
 				<p className="text-sm font-medium text-slate-700 dark:text-slate-200">
 					{t("export.noRowsTitle")}
 				</p>
@@ -301,18 +301,18 @@ function PreviewTable({
 	}
 
 	return (
-		<div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+		<div className="overflow-hidden rounded-xl border border-ink/10 dark:border-white/10">
 			<div className="max-h-[420px] overflow-auto">
 				<table className="w-full border-collapse text-sm">
 					<caption className="sr-only">{t("export.preview")}</caption>
-					<thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800">
+					<thead className="sticky top-0 z-10 bg-sun/20 dark:bg-white/10">
 						<tr>
 							{table.columns.map((column) => (
 								<th
 									key={column.key}
 									scope="col"
 									className={cn(
-										"whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400",
+										"whitespace-nowrap border-b-2 border-ink/10 px-3 py-2 text-left text-[11px] font-black uppercase tracking-wider text-ink/50 dark:border-white/10 dark:text-white/50",
 										NUMERIC_COLUMNS.includes(column.key) && "text-right",
 									)}
 								>
@@ -326,7 +326,7 @@ function PreviewTable({
 							<tr
 								// biome-ignore lint/suspicious/noArrayIndexKey: rendered from a static table snapshot
 								key={rowIndex}
-								className="odd:bg-white even:bg-slate-50/60 dark:odd:bg-slate-900 dark:even:bg-slate-800/30"
+								className="odd:bg-white/70 even:bg-sun/10 dark:odd:bg-white/5 dark:even:bg-white/[0.03]"
 							>
 								{cells.map((value, cellIndex) => {
 									const column = table.columns[cellIndex];
@@ -334,11 +334,11 @@ function PreviewTable({
 										<td
 											key={column.key}
 											className={cn(
-												"whitespace-nowrap border-b border-slate-100 px-3 py-1.5 text-slate-700 last:border-0 dark:border-slate-800 dark:text-slate-200",
+												"whitespace-nowrap border-b border-ink/8 px-3 py-1.5 font-medium text-ink/75 last:border-0 dark:border-white/8 dark:text-white/75",
 												NUMERIC_COLUMNS.includes(column.key) &&
 													"text-right tabular-nums",
 												column.key === "date" &&
-													"font-medium text-slate-900 dark:text-slate-100",
+													"font-extrabold text-ink dark:text-white",
 												column.key === "day" && "capitalize text-slate-500",
 												column.key === "note" &&
 													"text-xs text-slate-500 dark:text-slate-400",
@@ -359,7 +359,7 @@ function PreviewTable({
 					</tbody>
 				</table>
 			</div>
-			<div className="border-t border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+			<div className="border-t-2 border-ink/8 bg-sun/15 px-3 py-1.5 text-[11px] font-semibold text-ink/50 dark:border-white/10 dark:bg-white/5 dark:text-white/50">
 				{t("export.row", { count: table.rows.length })}
 			</div>
 		</div>
@@ -382,7 +382,7 @@ function Choice({
 			<p className="text-xs font-medium text-slate-600 dark:text-slate-300">
 				{label}
 			</p>
-			<div className="mt-1.5 flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+			<div className="mt-1.5 flex rounded-lg border-2 border-ink/10 p-0.5 dark:border-white/15">
 				{options.map((option) => (
 					<button
 						key={option.value}
@@ -391,7 +391,7 @@ function Choice({
 						className={cn(
 							"flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
 							value === option.value
-								? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+								? "bg-coral text-white dark:bg-white dark:text-night"
 								: "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
 						)}
 					>

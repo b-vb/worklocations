@@ -29,8 +29,8 @@ const nl = {
 	"app.closeData": "Sluit bestand",
 	"app.language": "Taal",
 
-	"result.title": "Resultaat",
-	"intro.title": "Zo werkt het",
+	"result.title": "Jouw dagen",
+	"intro.title": "Drie stappen, klaar",
 	"intro.subtitle":
 		"Drie stappen. Je locatiegeschiedenis blijft in je browser.",
 	"intro.step1.title": "1. Open je export",
@@ -41,7 +41,7 @@ const nl = {
 		"Kies de suggestie of open de kaart. Alles binnen de straal telt als tijd op die plek.",
 	"intro.step3.title": "3. Controleer en exporteer",
 	"intro.step3.body":
-		"Kies de periode, pas losse dagen aan en download een CSV met Datum + Kantoor/Thuis voor AFAS.",
+		"Kies de periode, pas losse dagen aan en download een CSV met Datum + Kantoor/Thuis.",
 
 	"drop.titleFirst": "Open je Google Tijdlijn-export",
 	"drop.titleAgain": "Locatiegeschiedenis",
@@ -155,9 +155,9 @@ const nl = {
 	"map.tilesFailed":
 		"Kaarttegels konden niet laden (offline?). Klikken en slepen werkt nog steeds.",
 
-	"period.title": "Welke periode?",
+	"period.title": "Welke maanden?",
 	"period.description":
-		"AFAS staat maar een beperkte terugvulperiode toe; begin daar en exporteer in stukken als dat nodig is.",
+		"Kies de maanden die je nodig hebt. Je kunt altijd in stukken exporteren.",
 	"period.from": "Van",
 	"period.to": "Tot",
 	"period.options": "Opties",
@@ -241,7 +241,7 @@ const nl = {
 	"status.pto": "Verlof",
 	"status.no-data": "Geen data",
 
-	"export.title": "Exporteren voor AFAS",
+	"export.title": "Maak je CSV",
 	"export.description":
 		"Controleer de tabel en download. Het bestand opent in Excel.",
 	"export.row_one": "{{count, number}} rij",
@@ -308,9 +308,9 @@ const en: Translation = {
 	"app.closeData": "Close data",
 	"app.language": "Language",
 
-	"result.title": "Result",
-	"intro.title": "How it works",
-	"intro.subtitle": "Three steps. Your location history stays in your browser.",
+	"result.title": "Your days",
+	"intro.title": "Three steps, done",
+	"intro.subtitle": "No spreadsheet fuss. Your timeline stays in your browser.",
 	"intro.step1.title": "1. Open the export",
 	"intro.step1.body":
 		"Pick the Timeline.json from your phone. It is parsed locally in a worker, so even a 200 MB file will not freeze the page.",
@@ -319,7 +319,7 @@ const en: Translation = {
 		"Take the suggestion or open the map. Everything inside the radius counts as time at that place.",
 	"intro.step3.title": "3. Review and export",
 	"intro.step3.body":
-		"Pick the period, fix the odd day, then download a CSV with Date + Office/Home for AFAS.",
+		"Pick the period, fix the odd day, then download a CSV with Date + Office/Home.",
 
 	"drop.titleFirst": "Open your Google Timeline export",
 	"drop.titleAgain": "Location history",
@@ -433,9 +433,9 @@ const en: Translation = {
 	"map.tilesFailed":
 		"Map tiles could not be loaded (offline?). Clicking and dragging still sets the location.",
 
-	"period.title": "Which period?",
+	"period.title": "Which months?",
 	"period.description":
-		"AFAS only allows a limited backfill window, so start there and export in chunks if needed.",
+		"Pick the months you need. Export in chunks if that is easier.",
 	"period.from": "From",
 	"period.to": "To",
 	"period.options": "Options",
@@ -519,7 +519,7 @@ const en: Translation = {
 	"status.pto": "PTO",
 	"status.no-data": "No data",
 
-	"export.title": "Export for AFAS",
+	"export.title": "Make your CSV",
 	"export.description":
 		"Check the table, then download. The file opens in Excel.",
 	"export.row_one": "{{count, number}} row",
