@@ -6,6 +6,7 @@
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build",
+    "deploy": "wrangler deploy",
     "preview": "vite preview",
     "test": "vitest run",
     "knip": "knip",
@@ -51,6 +52,7 @@
     "knip": "^6.45.1",
     "typescript": "7.0.2",
     "vite": "^8.0.0",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "wrangler": "^4.163.0"
   }
 }

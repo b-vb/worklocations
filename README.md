@@ -54,23 +54,23 @@ overrides are saved in this browser only.
 Two optional network calls exist: street lookup (OpenStreetMap Photon) and map
 tiles (OpenStreetMap). Neither receives your location history.
 
-## Deploy on Cloudflare Pages via GitHub
+## Deploy on Cloudflare via GitHub
 
-Yes. Cloudflare Pages builds this static SPA directly from GitHub — no adapter,
-Functions or wrangler.
+Cloudflare now creates new projects as **Workers with static assets** (Pages is
+their legacy workflow). This repo is set up for that path: `wrangler.jsonc`
+points at `dist` and enables SPA fallback.
 
 1. Push the repo to GitHub.
-2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** →
-   **Connect to Git**.
-3. Pick the repo and use:
+2. Cloudflare dashboard → **Workers & Pages** → **Create** →
+   **Continue with GitHub**.
+3. Pick the repo. Use:
    - Build command: `pnpm build`
-   - Build output directory: `dist`
+   - Deploy command: `npx wrangler deploy`
    - Environment variable: `NODE_VERSION=26`
-4. Save and deploy. Every push to the connected branch rebuilds the site.
+4. Save and deploy. Every push to the connected branch rebuilds and deploys.
 
-`public/_redirects` handles the single-page fallback. If the repo was previously
-connected as a **Worker**, create a Pages project instead (or change the project
-type); the page settings above are all it needs.
+The old “Continue to Pages” flow also still works if you prefer it, but then
+Cloudflare serves `dist` directly and the Worker config is unused.
 
 CI runs the same `pnpm check-all` gate on every push and pull request:
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
@@ -85,6 +85,7 @@ no Husky or extra dependency.
 | --- | --- |
 | `pnpm dev` | Development server |
 | `pnpm build` | Static production build in `dist/` |
+| `pnpm deploy` | Deploy the build with wrangler |
 | `pnpm preview` | Preview the production build |
 | `pnpm test` | Unit, machine and browser-like smoke tests |
 | `pnpm typecheck` | TypeScript |
