@@ -1,11 +1,12 @@
 import { useActor } from "@xstate/react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatLatLng, type LatLng, parseCoordinateInput } from "../lib/geo";
 import { useI18n } from "../lib/i18n";
 import type { AppSettings } from "../lib/settings";
 import { type PlaceCluster, suggestPlace } from "../lib/timeline/days";
 import { placesMachine } from "../machines/placesMachine";
 import { PlaceMap } from "./PlaceMap";
+import { PlacePreviewMap } from "./PlacePreviewMap";
 import { Badge, Button, Card, Field, SectionHeader, TextInput } from "./ui";
 
 type Props = {
@@ -60,6 +61,7 @@ export function PlaceSetup({
 		? t("places.noAddress")
 		: placesSnapshot.context.searchError;
 	const locationError = placesSnapshot.context.locateError;
+	const [previewPlace, setPreviewPlace] = useState<PlaceCluster | null>(null);
 
 	const direct = useMemo(() => parseCoordinateInput(query), [query]);
 
@@ -93,6 +95,13 @@ export function PlaceSetup({
 
 	const suggestedWork = suggestPlace(clusters, "WORK");
 	const suggestedHome = suggestPlace(clusters, "HOME", home);
+
+	const placeLabel = (place: PlaceCluster) =>
+		place.label === "WORK"
+			? t("places.workFromGoogle")
+			: place.label === "HOME"
+				? t("places.homeFromGoogle")
+				: t("places.frequentPlace");
 
 	const handleMapPick = (point: LatLng) => {
 		const label =
@@ -266,342 +275,366 @@ export function PlaceSetup({
 	}
 
 	return (
-		<Card>
-			<SectionHeader
-				step="2"
-				title={t("places.editorTitle")}
-				description={t("places.editorDescription")}
-				action={
-					<div className="flex items-center gap-2">
-						{workSuggestion ? (
-							<Badge tone="info">{t("places.workFound")}</Badge>
-						) : null}
-						<Button
-							size="sm"
-							variant="secondary"
-							onClick={() => placesSend({ type: "CLOSE_EDITOR" })}
-						>
-							{t("places.done")}
-						</Button>
-					</div>
-				}
-			/>
-
-			<div className="px-5 pt-5">
-				<PlaceMap
-					office={office}
-					home={home}
-					pickTarget={pickTarget}
-					onPickTargetChange={(target) =>
-						placesSend({ type: "SET_PICK_TARGET", target })
-					}
-					onPick={handleMapPick}
-					onMoveOffice={(point) => {
-						if (office)
-							placesSend({
-								type: "SET_OFFICE",
-								place: { ...office, ...point },
-							});
-					}}
-					onMoveHome={(point) => {
-						if (home)
-							placesSend({
-								type: "SET_HOME",
-								place: { ...home, ...point },
-							});
-					}}
-				/>
-			</div>
-
-			<div className="grid gap-6 px-5 pb-5 pt-4 lg:grid-cols-2">
-				<div className="space-y-4">
-					<Field
-						label={t("places.addressLabel")}
-						hint={t("places.addressHint")}
-					>
-						<TextInput
-							value={query}
-							aria-label={t("places.addressLabel")}
-							placeholder={t("places.addressPlaceholder")}
-							onChange={(event) =>
-								placesSend({
-									type: "QUERY_CHANGED",
-									query: event.target.value,
-								})
-							}
-						/>
-					</Field>
-
-					{direct ? (
-						<Button
-							variant="primary"
-							size="sm"
-							onClick={() =>
-								applyOffice(direct.lat, direct.lng, formatLatLng(direct))
-							}
-						>
-							{t("places.useCoords", { coords: formatLatLng(direct, 4) })}
-						</Button>
-					) : null}
-
-					{searching ? (
-						<p className="text-xs text-slate-500 dark:text-slate-400">
-							{t("places.searching")}
-						</p>
-					) : null}
-
-					{searchError ? (
-						<p className="text-xs text-rose-600 dark:text-rose-400">
-							{searchError}
-						</p>
-					) : null}
-
-					{results.length > 0 ? (
-						<ul className="divide-y divide-ink/8 overflow-hidden rounded-2xl border-2 border-ink/10 dark:divide-white/10 dark:border-white/10">
-							{results.map((result) => (
-								<li key={`${result.label}-${result.lat}-${result.lng}`}>
-									<button
-										type="button"
-										onClick={() =>
-											applyOffice(result.lat, result.lng, result.label)
-										}
-										className="w-full px-3 py-2 text-left text-sm font-medium hover:bg-sun/20 dark:hover:bg-white/5"
-									>
-										<span className="block font-medium text-slate-800 dark:text-slate-100">
-											{result.label}
-										</span>
-										<span className="block font-mono text-[11px] text-slate-400">
-											{formatLatLng(result)}
-										</span>
-									</button>
-								</li>
-							))}
-						</ul>
-					) : null}
-
-					<div className="flex flex-wrap gap-2">
-						<Button
-							size="sm"
-							onClick={locateCurrentPosition}
-							disabled={locating}
-						>
-							{locating ? t("places.locating") : t("places.useCurrent")}
-						</Button>
-						{office ? (
+		<>
+			<Card>
+				<SectionHeader
+					step="2"
+					title={t("places.editorTitle")}
+					description={t("places.editorDescription")}
+					action={
+						<div className="flex items-center gap-2">
+							{workSuggestion ? (
+								<Badge tone="info">{t("places.workFound")}</Badge>
+							) : null}
 							<Button
 								size="sm"
-								variant="danger"
-								onClick={() => placesSend({ type: "CLEAR_OFFICE" })}
+								variant="secondary"
+								onClick={() => placesSend({ type: "CLOSE_EDITOR" })}
 							>
-								{t("places.clearOffice")}
+								{t("places.done")}
 							</Button>
-						) : null}
-					</div>
-					{locationError ? (
-						<p className="text-xs text-rose-600 dark:text-rose-400">
-							{locationError}
-						</p>
-					) : null}
+						</div>
+					}
+				/>
 
-					{office ? (
-						<div className="rounded-2xl border-2 border-sky/40 bg-sky/15 p-3 dark:border-sky/20 dark:bg-sky/10">
-							<div className="flex items-center justify-between gap-2">
-								<div>
-									<p className="text-sm font-extrabold text-ink dark:text-white">
-										{office.label || t("places.office")}
-									</p>
-									<p className="font-mono text-[11px] text-ink/50 dark:text-white/50">
-										{formatLatLng(office)}
-									</p>
-								</div>
-								<Badge tone="office">{t("places.officeBadge")}</Badge>
-							</div>
-							<RadiusSlider
-								radius={office.radiusMeters}
-								onChange={(radiusMeters) =>
-									onChange({ office: { ...office, radiusMeters } })
+				<div className="px-5 pt-5">
+					<PlaceMap
+						office={office}
+						home={home}
+						pickTarget={pickTarget}
+						onPickTargetChange={(target) =>
+							placesSend({ type: "SET_PICK_TARGET", target })
+						}
+						onPick={handleMapPick}
+						onMoveOffice={(point) => {
+							if (office)
+								placesSend({
+									type: "SET_OFFICE",
+									place: { ...office, ...point },
+								});
+						}}
+						onMoveHome={(point) => {
+							if (home)
+								placesSend({
+									type: "SET_HOME",
+									place: { ...home, ...point },
+								});
+						}}
+					/>
+				</div>
+
+				<div className="grid gap-6 px-5 pb-5 pt-4 lg:grid-cols-2">
+					<div className="space-y-4">
+						<Field
+							label={t("places.addressLabel")}
+							hint={t("places.addressHint")}
+						>
+							<TextInput
+								value={query}
+								aria-label={t("places.addressLabel")}
+								placeholder={t("places.addressPlaceholder")}
+								onChange={(event) =>
+									placesSend({
+										type: "QUERY_CHANGED",
+										query: event.target.value,
+									})
 								}
 							/>
-						</div>
-					) : (
-						<div className="rounded-2xl border-2 border-dashed border-ink/20 p-3 dark:border-white/15">
-							{suggestedWork ? (
+						</Field>
+
+						{direct ? (
+							<Button
+								variant="primary"
+								size="sm"
+								onClick={() =>
+									applyOffice(direct.lat, direct.lng, formatLatLng(direct))
+								}
+							>
+								{t("places.useCoords", { coords: formatLatLng(direct, 4) })}
+							</Button>
+						) : null}
+
+						{searching ? (
+							<p className="text-xs text-slate-500 dark:text-slate-400">
+								{t("places.searching")}
+							</p>
+						) : null}
+
+						{searchError ? (
+							<p className="text-xs text-rose-600 dark:text-rose-400">
+								{searchError}
+							</p>
+						) : null}
+
+						{results.length > 0 ? (
+							<ul className="divide-y divide-ink/8 overflow-hidden rounded-2xl border-2 border-ink/10 dark:divide-white/10 dark:border-white/10">
+								{results.map((result) => (
+									<li key={`${result.label}-${result.lat}-${result.lng}`}>
+										<button
+											type="button"
+											onClick={() =>
+												applyOffice(result.lat, result.lng, result.label)
+											}
+											className="w-full px-3 py-2 text-left text-sm font-medium hover:bg-sun/20 dark:hover:bg-white/5"
+										>
+											<span className="block font-medium text-slate-800 dark:text-slate-100">
+												{result.label}
+											</span>
+											<span className="block font-mono text-[11px] text-slate-400">
+												{formatLatLng(result)}
+											</span>
+										</button>
+									</li>
+								))}
+							</ul>
+						) : null}
+
+						<div className="flex flex-wrap gap-2">
+							<Button
+								size="sm"
+								onClick={locateCurrentPosition}
+								disabled={locating}
+							>
+								{locating ? t("places.locating") : t("places.useCurrent")}
+							</Button>
+							{office ? (
 								<Button
 									size="sm"
-									variant="primary"
-									className="mt-2"
-									onClick={() =>
-										applyOffice(
-											suggestedWork.lat,
-											suggestedWork.lng,
-											suggestedWork.label === "WORK"
-												? t("places.workFromGoogle")
-												: t("places.mostVisited"),
-										)
-									}
+									variant="danger"
+									onClick={() => placesSend({ type: "CLEAR_OFFICE" })}
 								>
-									{suggestedWork.label === "WORK"
-										? t("places.useWork")
-										: t("places.useMostVisited")}
+									{t("places.clearOffice")}
 								</Button>
 							) : null}
 						</div>
-					)}
+						{locationError ? (
+							<p className="text-xs text-rose-600 dark:text-rose-400">
+								{locationError}
+							</p>
+						) : null}
 
-					<div className="rounded-2xl border-2 border-mint/50 bg-mint/15 p-3 dark:border-mint/20 dark:bg-mint/10">
-						<div className="flex items-center justify-between gap-2">
-							<div>
-								<p className="text-sm font-extrabold text-ink dark:text-white">
-									{home?.label ?? t("places.homeAuto")}
-								</p>
-								<p className="text-[11px] text-ink/50 dark:text-white/50">
-									{home ? formatLatLng(home) : t("places.homeAutoHint")}
-								</p>
+						{office ? (
+							<div className="rounded-2xl border-2 border-sky/40 bg-sky/15 p-3 dark:border-sky/20 dark:bg-sky/10">
+								<div className="flex items-center justify-between gap-2">
+									<div>
+										<p className="text-sm font-extrabold text-ink dark:text-white">
+											{office.label || t("places.office")}
+										</p>
+										<p className="font-mono text-[11px] text-ink/50 dark:text-white/50">
+											{formatLatLng(office)}
+										</p>
+									</div>
+									<Badge tone="office">{t("places.officeBadge")}</Badge>
+								</div>
+								<RadiusSlider
+									radius={office.radiusMeters}
+									onChange={(radiusMeters) =>
+										onChange({ office: { ...office, radiusMeters } })
+									}
+								/>
 							</div>
-							<div className="flex items-center gap-2">
-								{suggestedHome ? (
+						) : (
+							<div className="rounded-2xl border-2 border-dashed border-ink/20 p-3 dark:border-white/15">
+								{suggestedWork ? (
 									<Button
 										size="sm"
+										variant="primary"
+										className="mt-2"
 										onClick={() =>
-											applyHome(
-												suggestedHome.lat,
-												suggestedHome.lng,
-												suggestedHome.label ?? t("places.home"),
+											applyOffice(
+												suggestedWork.lat,
+												suggestedWork.lng,
+												suggestedWork.label === "WORK"
+													? t("places.workFromGoogle")
+													: t("places.mostVisited"),
 											)
 										}
 									>
-										{t("places.useSuggested")}
-									</Button>
-								) : null}
-								{home ? (
-									<Button
-										size="sm"
-										variant="ghost"
-										onClick={() => placesSend({ type: "CLEAR_HOME" })}
-									>
-										{t("places.autoHome")}
+										{suggestedWork.label === "WORK"
+											? t("places.useWork")
+											: t("places.useMostVisited")}
 									</Button>
 								) : null}
 							</div>
+						)}
+
+						<div className="rounded-2xl border-2 border-mint/50 bg-mint/15 p-3 dark:border-mint/20 dark:bg-mint/10">
+							<div className="flex items-center justify-between gap-2">
+								<div>
+									<p className="text-sm font-extrabold text-ink dark:text-white">
+										{home?.label ?? t("places.homeAuto")}
+									</p>
+									<p className="text-[11px] text-ink/50 dark:text-white/50">
+										{home ? formatLatLng(home) : t("places.homeAutoHint")}
+									</p>
+								</div>
+								<div className="flex items-center gap-2">
+									{suggestedHome ? (
+										<Button
+											size="sm"
+											onClick={() =>
+												applyHome(
+													suggestedHome.lat,
+													suggestedHome.lng,
+													suggestedHome.label ?? t("places.home"),
+												)
+											}
+										>
+											{t("places.useSuggested")}
+										</Button>
+									) : null}
+									{home ? (
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => placesSend({ type: "CLEAR_HOME" })}
+										>
+											{t("places.autoHome")}
+										</Button>
+									) : null}
+								</div>
+							</div>
+							{home ? (
+								<RadiusSlider
+									radius={home.radiusMeters}
+									onChange={(radiusMeters) =>
+										onChange({ home: { ...home, radiusMeters } })
+									}
+								/>
+							) : null}
 						</div>
-						{home ? (
-							<RadiusSlider
-								radius={home.radiusMeters}
-								onChange={(radiusMeters) =>
-									onChange({ home: { ...home, radiusMeters } })
-								}
-							/>
-						) : null}
+					</div>
+
+					<div>
+						<p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+							{t("places.frequent")}
+						</p>
+						<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+							{t("places.frequentHint")}
+						</p>
+						<ul className="mt-3 space-y-2">
+							{clusters.slice(0, 7).map((place) => {
+								const isOffice =
+									office &&
+									Math.abs(office.lat - place.lat) < 1e-4 &&
+									Math.abs(office.lng - place.lng) < 1e-4;
+								const isHome =
+									home &&
+									Math.abs(home.lat - place.lat) < 1e-4 &&
+									Math.abs(home.lng - place.lng) < 1e-4;
+								return (
+									<li
+										key={`${place.lat}-${place.lng}`}
+										className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-ink/8 px-3 py-2 dark:border-white/10"
+									>
+										<div className="min-w-0">
+											<p className="truncate text-sm font-extrabold text-ink dark:text-white">
+												{place.label === "WORK"
+													? t("places.work")
+													: place.label === "HOME"
+														? t("places.home")
+														: t("places.frequentPlace")}
+												<span className="ml-2 font-mono text-[11px] font-normal text-ink/40 dark:text-white/40">
+													{formatLatLng(place, 4)}
+												</span>
+											</p>
+											<p className="text-[11px] font-medium text-ink/50 dark:text-white/50">
+												{t("places.frequentSummary", {
+													hours: Math.round(place.minutes / 60),
+													days: place.days,
+												})}
+											</p>
+										</div>
+										<div className="flex flex-wrap items-center justify-end gap-1">
+											<Button
+												size="sm"
+												variant="secondary"
+												onClick={() => setPreviewPlace(place)}
+											>
+												<span aria-hidden="true">🗺️</span>
+												{t("places.showMap")}
+											</Button>
+											{isOffice ? (
+												<Badge tone="office">{t("places.officeBadge")}</Badge>
+											) : (
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={() =>
+														applyOffice(place.lat, place.lng, placeLabel(place))
+													}
+												>
+													{t("places.office")}
+												</Button>
+											)}
+											{isHome ? (
+												<Badge tone="home">{t("places.homeBadge")}</Badge>
+											) : (
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={() =>
+														applyHome(place.lat, place.lng, placeLabel(place))
+													}
+												>
+													{t("places.home")}
+												</Button>
+											)}
+										</div>
+									</li>
+								);
+							})}
+							{clusters.length === 0 ? (
+								<li className="rounded-xl border-2 border-dashed border-ink/20 px-3 py-4 text-xs font-medium text-ink/50 dark:border-white/15 dark:text-white/50">
+									{t("places.noPlaces")}
+								</li>
+							) : null}
+						</ul>
 					</div>
 				</div>
 
-				<div>
-					<p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-						{t("places.frequent")}
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/8 px-5 py-3 dark:border-white/10">
+					<p className="text-xs text-slate-500 dark:text-slate-400">
+						{office ? t("places.footerSaved") : t("places.footerNeeded")}
 					</p>
-					<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-						{t("places.frequentHint")}
-					</p>
-					<ul className="mt-3 space-y-2">
-						{clusters.slice(0, 7).map((place) => {
-							const isOffice =
-								office &&
-								Math.abs(office.lat - place.lat) < 1e-4 &&
-								Math.abs(office.lng - place.lng) < 1e-4;
-							const isHome =
-								home &&
-								Math.abs(home.lat - place.lat) < 1e-4 &&
-								Math.abs(home.lng - place.lng) < 1e-4;
-							return (
-								<li
-									key={`${place.lat}-${place.lng}`}
-									className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-ink/8 px-3 py-2 dark:border-white/10"
-								>
-									<div className="min-w-0">
-										<p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-											{place.label === "WORK"
-												? t("places.work")
-												: place.label === "HOME"
-													? t("places.home")
-													: t("places.frequentPlace")}
-											<span className="ml-2 font-mono text-[11px] font-normal text-slate-400">
-												{formatLatLng(place, 4)}
-											</span>
-										</p>
-										<p className="text-[11px] text-slate-500 dark:text-slate-400">
-											{t("places.frequentSummary", {
-												hours: Math.round(place.minutes / 60),
-												days: place.days,
-											})}
-										</p>
-									</div>
-									<div className="flex gap-1">
-										{isOffice ? (
-											<Badge tone="office">{t("places.officeBadge")}</Badge>
-										) : (
-											<Button
-												size="sm"
-												variant="ghost"
-												onClick={() =>
-													applyOffice(
-														place.lat,
-														place.lng,
-														place.label ?? t("places.office"),
-													)
-												}
-											>
-												{t("places.office")}
-											</Button>
-										)}
-										{isHome ? (
-											<Badge tone="home">{t("places.homeBadge")}</Badge>
-										) : (
-											<Button
-												size="sm"
-												variant="ghost"
-												onClick={() =>
-													applyHome(
-														place.lat,
-														place.lng,
-														place.label ?? t("places.home"),
-													)
-												}
-											>
-												{t("places.home")}
-											</Button>
-										)}
-									</div>
-								</li>
-							);
-						})}
-						{clusters.length === 0 ? (
-							<li className="rounded-xl border-2 border-dashed border-ink/20 px-3 py-4 text-xs font-medium text-ink/50 dark:border-white/15 dark:text-white/50">
-								{t("places.noPlaces")}
-							</li>
-						) : null}
-					</ul>
+					{office && onContinue ? (
+						<Button variant="primary" size="sm" onClick={onContinue}>
+							{t("places.next")}
+						</Button>
+					) : (
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => placesSend({ type: "CLOSE_EDITOR" })}
+						>
+							{t("places.back")}
+						</Button>
+					)}
 				</div>
-			</div>
-
-			<div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-ink/8 px-5 py-3 dark:border-white/10">
-				<p className="text-xs text-slate-500 dark:text-slate-400">
-					{office ? t("places.footerSaved") : t("places.footerNeeded")}
-				</p>
-				{office && onContinue ? (
-					<Button variant="primary" size="sm" onClick={onContinue}>
-						{t("places.next")}
-					</Button>
-				) : (
-					<Button
-						size="sm"
-						variant="ghost"
-						onClick={() => placesSend({ type: "CLOSE_EDITOR" })}
-					>
-						{t("places.back")}
-					</Button>
-				)}
-			</div>
-		</Card>
+			</Card>
+			{previewPlace ? (
+				<PlacePreviewMap
+					place={previewPlace}
+					onClose={() => setPreviewPlace(null)}
+					onSetOffice={() => {
+						applyOffice(
+							previewPlace.lat,
+							previewPlace.lng,
+							placeLabel(previewPlace),
+						);
+						setPreviewPlace(null);
+					}}
+					onSetHome={() => {
+						applyHome(
+							previewPlace.lat,
+							previewPlace.lng,
+							placeLabel(previewPlace),
+						);
+						setPreviewPlace(null);
+					}}
+				/>
+			) : null}
+		</>
 	);
 }
 

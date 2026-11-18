@@ -13,6 +13,7 @@ import {
 import type { LatLng } from "../lib/geo";
 import { useI18n } from "../lib/i18n";
 import type { PlaceSetting } from "../lib/settings";
+import { TILE_ATTRIBUTION, TILE_PROVIDERS } from "../lib/tiles";
 import type { PickTarget } from "../machines/placesMachine";
 import { tileProviderMachine } from "../machines/tileProviderMachine";
 import { Button, cn } from "./ui";
@@ -20,18 +21,6 @@ import { Button, cn } from "./ui";
 const OFFICE_COLOR = "#4f46e5";
 const HOME_COLOR = "#059669";
 const FALLBACK_CENTER: L.LatLngExpression = [52.1326, 5.2913];
-
-const ATTRIBUTION =
-	'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-/**
- * All key-free. The second one is only used when the main OSM tile server
- * fails repeatedly (blocked network, tough proxy, rate limit).
- */
-const TILE_PROVIDERS = [
-	"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-	"https://tile.openstreetmap.de/{z}/{x}/{y}.png",
-];
 
 type Props = {
 	office: PlaceSetting | null;
@@ -133,12 +122,12 @@ export function PlaceMap({
 
 	return (
 		<div className="relative isolate z-0 overflow-hidden rounded-[26px] border-2 border-ink/10 dark:border-white/10">
-			<div className="flex flex-wrap items-center justify-between gap-2 bg-sun/20 px-3 py-2 dark:bg-white/5">
-				<div className="flex items-center gap-2">
-					<span className="text-[11px] font-medium uppercase tracking-wide text-ink/50 dark:text-white/50">
+			<div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink/8 bg-white/70 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+				<div className="flex flex-wrap items-center gap-2">
+					<span className="text-xs font-semibold text-ink/70 dark:text-white/70">
 						{t("map.clickToSet")}
 					</span>
-					<div className="flex rounded-full border-2 border-ink/10 p-0.5 dark:border-white/10">
+					<div className="flex rounded-full border-2 border-ink/15 bg-white p-0.5 dark:border-white/15 dark:bg-white/10">
 						{(
 							[
 								["office", t("map.office")],
@@ -150,12 +139,12 @@ export function PlaceMap({
 								type="button"
 								onClick={() => onPickTargetChange(value)}
 								className={cn(
-									"rounded px-2 py-0.5 text-[11px] font-medium transition-colors",
+									"rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-colors",
 									pickTarget === value
 										? value === "office"
 											? "bg-sky text-ink"
 											: "bg-mint text-ink"
-										: "text-ink/60 hover:bg-white/70 dark:text-white/60 dark:hover:bg-white/10",
+										: "text-ink/65 hover:bg-sun/25 dark:text-white/65 dark:hover:bg-white/15",
 								)}
 								aria-pressed={pickTarget === value}
 							>
@@ -165,7 +154,7 @@ export function PlaceMap({
 					</div>
 				</div>
 				<div className="flex items-center gap-2">
-					<span className="hidden text-[11px] text-ink/35 dark:text-white/35 sm:inline">
+					<span className="hidden text-[11px] font-medium text-ink/55 dark:text-white/55 sm:inline">
 						{t("map.dragHint")}
 					</span>
 					<Button
@@ -202,7 +191,7 @@ export function PlaceMap({
 					<TileLayer
 						key={providerUrl}
 						url={providerUrl}
-						attribution={ATTRIBUTION}
+						attribution={TILE_ATTRIBUTION}
 						maxZoom={19}
 						eventHandlers={{
 							tileerror: handleTileError,

@@ -326,7 +326,7 @@ function PreviewTable({
 							<tr
 								// biome-ignore lint/suspicious/noArrayIndexKey: rendered from a static table snapshot
 								key={rowIndex}
-								className="odd:bg-white/70 even:bg-sun/10 dark:odd:bg-white/5 dark:even:bg-white/[0.03]"
+								className="odd:bg-white/70 even:bg-ink/[0.03] dark:odd:bg-white/5 dark:even:bg-white/[0.03]"
 							>
 								{cells.map((value, cellIndex) => {
 									const column = table.columns[cellIndex];

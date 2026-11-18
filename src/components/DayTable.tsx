@@ -196,12 +196,18 @@ function DayLine({
 		<tr
 			className={cn(
 				"border-b border-ink/8 last:border-0 dark:border-white/8",
-				row.needsReview && "bg-sun/20 dark:bg-sun/10",
 				!row.included && "opacity-50",
 			)}
 		>
-			<td className="whitespace-nowrap px-4 py-2.5">
-				<div className="font-medium text-slate-800 dark:text-slate-100">
+			<td
+				className={cn(
+					"whitespace-nowrap border-l-4 px-4 py-2.5",
+					row.needsReview
+						? "border-sun dark:border-sun/70"
+						: "border-transparent",
+				)}
+			>
+				<div className="font-bold text-ink dark:text-white">
 					{formatDay(row.date)}
 				</div>
 				<div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">

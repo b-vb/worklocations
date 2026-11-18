@@ -66,7 +66,7 @@ it("renders the intro and boots through the import actor", async () => {
 		),
 	).toBeTruthy();
 
-	fireEvent.click(screen.getByText("Gebruik Google's WORK-plek"));
+	fireEvent.click(screen.getByText("Gebruik werklocatie"));
 
 	await waitFor(
 		() => {
@@ -98,5 +98,5 @@ it("skips the place picker when an office is already saved", async () => {
 		},
 		{ timeout: 4000 },
 	);
-	expect(screen.queryByText("Gebruik Google's WORK-plek")).toBeNull();
+	expect(screen.queryByText("Gebruik werklocatie")).toBeNull();
 });
